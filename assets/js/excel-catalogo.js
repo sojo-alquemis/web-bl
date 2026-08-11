@@ -26,6 +26,13 @@
 const DELETE_SENTINELS = new Set(['delete', 'borrar']);
 const CATEGORIAS_VALIDAS = new Set(['capilar', 'facial', 'corporal']);
 
+// El catálogo de este sitio es SOLO la marca BioLand (ver 01_DECISIONS.md
+// § "Arquitectura de datos" — el Excel de ACS trae varias marcas mezcladas:
+// BioLand, Seed, Reserve, Terre de Vie... Cualquier fila de otra marca se
+// omite por completo (no solo el campo, la fila entera) para que nunca se
+// mezcle catálogo de otra marca/categoría (ej. Alimentos de Seed).
+const MARCA_PERMITIDA = 'bioland';
+
 // Encabezado normalizado (primera línea, sin *, minúsculas, trim) → campo interno.
 // '__ignore' = columna reconocida pero que no se guarda en esta DB.
 const HEADER_ALIASES = {
@@ -35,6 +42,7 @@ const HEADER_ALIASES = {
   'ean13 / upc':        'ean_upc',
   'dun_14':             'dun14',
   'dun14':              'dun14',
+  'marca':              'marca',
   'nombre_interno':     'nombre_interno',
   'nombre_es':          'nombre_es',
   'nombre_en':          'nombre_en',
@@ -88,7 +96,9 @@ function toBool(v) {
  * @param {object} workbook           resultado de XLSX.read()
  * @param {Map<string,string>} familiaMap     slug → id (o slug si no hay id, ej. mock)
  * @param {Map<string,string>} ingredienteMap  slug → id (o slug si no hay id, ej. mock)
- * @returns {{ rows: Array, errors: Array<{row:number|null, codigo?:string, message:string}> }}
+ * @returns {{ rows: Array, errors: Array<{row:number|null, codigo?:string, message:string}>, otrasMarcas: Array<{row:number, codigo:string, marca:string}> }}
+ *   otrasMarcas: filas que se omitieron por completo porque su columna "marca" no es BioLand
+ *   (el catálogo de este sitio es solo BioLand — ver 01_DECISIONS.md).
  */
 export function parseProductosWorkbook(workbook, familiaMap, ingredienteMap) {
   const sheetName = workbook.SheetNames.find(n => /producto/i.test(n)) || workbook.SheetNames[0];
@@ -106,6 +116,9 @@ export function parseProductosWorkbook(workbook, familiaMap, ingredienteMap) {
 
   const rows = [];
   const errors = [];
+  const otrasMarcas = []; // filas omitidas por completo por no ser marca BioLand
+
+  const marcaIdx = colMap.indexOf('marca');
 
   for (let i = headerRowIdx + 1; i < grid.length; i++) {
     const raw = grid[i];
@@ -119,12 +132,34 @@ export function parseProductosWorkbook(workbook, familiaMap, ingredienteMap) {
       continue;
     }
 
+    // Filtro de marca: se aplica a la FILA completa, no a un campo — una
+    // fila de otra marca no se guarda ni parcialmente. Celda vacía se deja
+    // pasar (no hay suficiente info para descartarla, es un caso raro).
+    if (marcaIdx >= 0) {
+      const marcaCell = raw[marcaIdx];
+      if (!isEmptyCell(marcaCell)) {
+        const marcaNorm = String(marcaCell).trim().toLowerCase();
+        if (marcaNorm !== MARCA_PERMITIDA) {
+          otrasMarcas.push({ row: rowNumber, codigo, marca: String(marcaCell).trim() });
+          continue;
+        }
+      }
+    }
+
     const fields = {};
     const rowErrors = [];
 
     colMap.forEach((key, idx) => {
       if (!key || key === 'codigo' || key === '__ignore') return;
       const cell = raw[idx];
+
+      if (key === 'marca') {
+        // Ya se filtró arriba por fila completa; si llegó hasta aquí es
+        // BioLand (o la celda vino vacía) — se normaliza siempre a 'bioland'
+        // en vez de confiar en la capitalización que traiga el Excel.
+        fields.marca = MARCA_PERMITIDA;
+        return;
+      }
 
       if (key === 'slug') {
         // El slug es identidad del producto: nunca se vacía por "delete/borrar",
@@ -176,13 +211,14 @@ export function parseProductosWorkbook(workbook, familiaMap, ingredienteMap) {
     if (rowErrors.length) errors.push({ row: rowNumber, codigo, message: rowErrors.join(' ') });
   }
 
-  return { rows, errors };
+  return { rows, errors, otrasMarcas };
 }
 
 // Orden y encabezados del archivo exportado (compatible con el importador).
 const EXPORT_COLUMNS = [
   ['codigo',           'codigo'],
   ['slug',              'slug'],
+  ['marca',             'marca'],
   ['ean_upc',           'ean_upc'],
   ['dun14',             'dun_14'],
   ['nombre_interno',    'nombre_interno'],

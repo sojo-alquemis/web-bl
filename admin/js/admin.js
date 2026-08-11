@@ -672,9 +672,14 @@ importInput?.addEventListener('change', async (e) => {
     const familiaMap    = new Map(familias.map(f => [f.slug, f.id ?? f.slug]));
     const ingredienteMap = new Map(ingredientes.map(i => [i.slug, i.id ?? i.slug]));
 
-    const { rows, errors } = parseProductosWorkbook(workbook, familiaMap, ingredienteMap);
+    const { rows, errors, otrasMarcas } = parseProductosWorkbook(workbook, familiaMap, ingredienteMap);
     if (!rows.length) {
-      _showImportResult(`No se encontraron filas de producto para importar.${errors.length ? '<br>' + errors.map(e => `Fila ${e.row ?? '—'}: ${e.message}`).join('<br>') : ''}`, 'error', { dismissible: true });
+      _showImportResult(
+        `No se encontraron filas de producto para importar.` +
+        (otrasMarcas.length ? `<br>${otrasMarcas.length} fila(s) eran de otra marca (no BioLand) — se omitieron.` : '') +
+        (errors.length ? '<br>' + errors.map(e => `Fila ${e.row ?? '—'}: ${e.message}`).join('<br>') : ''),
+        'error', { dismissible: true }
+      );
       return;
     }
 
@@ -727,6 +732,7 @@ importInput?.addEventListener('change', async (e) => {
     _showImportResult(
       `<strong>${creados}</strong> creados · <strong>${actualizados}</strong> actualizados` +
       (omitidos ? ` · <strong>${omitidos}</strong> omitidos` : '') +
+      (otrasMarcas.length ? ` · <strong>${otrasMarcas.length}</strong> de otra marca (omitidas)` : '') +
       (fallos.length ? `<br><br><strong style="color:var(--color-text-danger);">Errores al guardar (${fallos.length}):</strong><br>${listaTruncada(fallos)}` : '') +
       (avisos.length ? `<br><br><strong>Avisos de datos (${avisos.length})</strong> — campos ignorados por slug/valor no reconocido, no impiden que el resto de la fila se guarde:<br>${listaTruncada(avisos)}` : '') +
       modoNota,
