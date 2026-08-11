@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — BioLand Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- ── Top bar ─────────────────────────────────────────── -->
+  <header class="admin-topbar">
+    <a href="../index.html" class="admin-topbar__logo" target="_blank" title="Ver sitio público">
+      <img src="../assets/img/bioland-logo.svg" alt="BioLand">
+      <span class="admin-topbar__logo-label">Admin</span>
+    </a>
+    <div class="admin-topbar__right">
+      <span class="admin-topbar__user">
+        <i class="ti ti-user-circle" style="font-size:18px;"></i>
+        admin@bio-land.com
+      </span>
+      <a href="index.html" class="admin-topbar__logout" id="btn-logout">
+        <i class="ti ti-logout-2"></i> Salir
+      </a>
+    </div>
+  </header>
+
+  <!-- ── Main content ────────────────────────────────────── -->
+  <main class="admin-main">
+
+    <!-- ── Nav tabs ──────────────────────────────────────── -->
+    <nav class="admin-tabs" role="tablist" aria-label="Secciones del admin">
+      <button class="admin-tab active" role="tab" data-tab="productos">Productos</button>
+      <button class="admin-tab" role="tab" data-tab="familias">Familias</button>
+      <button class="admin-tab" role="tab" data-tab="ingredientes">Ingredientes</button>
+      <button class="admin-tab" role="tab" data-tab="contenido">Contenido</button>
+      <button class="admin-tab" role="tab" data-tab="banners">Banners</button>
+      <button class="admin-tab" role="tab" data-tab="ajustes">Ajustes</button>
+      <div class="admin-tabs__lang">
+        Editar en
+        <button class="lang-btn active" id="lang-es" data-lang="es">ES</button>
+        <button class="lang-btn" id="lang-en" data-lang="en">EN</button>
+      </div>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB: PRODUCTOS
+    ══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-productos" role="tabpanel">
+
+      <!-- Toolbar -->
+      <div class="admin-toolbar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input type="search" placeholder="Buscar por código o nombre" id="prod-search">
+        </div>
+        <select id="prod-filter-cat" style="width:auto;">
+          <option value="">Categoría: todas</option>
+          <option value="capilar">Cuidado Capilar</option>
+          <option value="facial">Cuidado Facial</option>
+          <option value="corporal">Cuidado Corporal</option>
+        </select>
+        <select id="prod-filter-fam" style="width:auto;">
+          <option value="">Familia: todas</option>
+        </select>
+        <select id="prod-filter-estado" style="width:auto;">
+          <option value="">Estado: todos</option>
+          <option value="1">Activos</option>
+          <option value="0">Inactivos</option>
+        </select>
+        <button class="btn" title="Exportar a Excel">
+          <i class="ti ti-file-download"></i> Exportar
+        </button>
+        <button class="btn" title="Importar desde Excel">
+          <i class="ti ti-file-spreadsheet"></i> Importar
+        </button>
+        <button class="btn btn-primary" id="btn-new-product">
+          <i class="ti ti-plus"></i> Nuevo
+        </button>
+      </div>
+
+      <!-- Table — renderizada por admin.js desde db.js -->
+      <div class="admin-table-wrap" id="prod-table-body">
+        <div class="admin-table-head">
+          <span></span>
+          <span>Código</span>
+          <span>Nombre</span>
+          <span>Familia</span>
+          <span>Badge</span>
+          <span>Activo</span>
+          <span></span>
+        </div>
+        <!-- filas inyectadas por JS -->
+        <div class="admin-table-loading">
+          <i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i>
+          Cargando productos…
+        </div>
+      </div>
+
+      <div class="admin-table-pagination" id="prod-pagination">
+        <span id="prod-count">—</span>
+      </div>
+
+    </div><!-- /tab-productos -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB: FAMILIAS
+    ══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-familias" role="tabpanel">
+
+      <div class="admin-card">
+        <p class="admin-card__title">Familia de producto · crear / editar</p>
+        <div class="grid-2">
+          <div>
+            <label>Categoría (agrupa)</label>
+            <select>
+              <option>Cuidado Capilar</option>
+              <option>Cuidado Facial</option>
+              <option>Cuidado Corporal</option>
+            </select>
+          </div>
+          <div>
+            <label>Nombre</label>
+            <input type="text" placeholder="Infusión de Romero">
+          </div>
+          <div>
+            <label>Slug</label>
+            <input type="text" placeholder="infusion-de-romero">
+          </div>
+          <div>
+            <label>Orden</label>
+            <input type="number" value="7">
+          </div>
+          <div class="col-span-2">
+            <label>Descripción (opcional)</label>
+            <textarea placeholder="Descripción de la familia..." style="min-height:40px;"></textarea>
+          </div>
+        </div>
+
+        <div class="flex-row" style="margin-top:12px;">
+          <div class="img-thumb" style="width:56px;height:56px;">
+            <i class="ti ti-photo" style="font-size:22px;"></i>
+          </div>
+          <button class="btn"><i class="ti ti-upload"></i> Imagen</button>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
+            <input type="checkbox" checked> Activa
+          </label>
+          <button class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Families list table -->
+      <div class="admin-card">
+        <p class="admin-card__title">Familias existentes</p>
+        <div class="admin-table-wrap">
+          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; background:var(--color-background-secondary); font-size:11px; color:var(--color-text-tertiary);">
+            <span>Nombre</span><span>Categoría</span><span>Imagen</span><span>Activa</span><span></span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; border-top:0.5px solid var(--color-border-tertiary); font-size:13px;">
+            <span>Aceite de Coco</span>
+            <span style="font-size:12px; color:var(--color-text-secondary);">Capilar</span>
+            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+            <div class="admin-table-actions">
+              <button title="Editar"><i class="ti ti-edit"></i></button>
+              <button class="del" title="Eliminar"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; border-top:0.5px solid var(--color-border-tertiary); font-size:13px;">
+            <span>Aloe Vera</span>
+            <span style="font-size:12px; color:var(--color-text-secondary);">Capilar</span>
+            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+            <div class="admin-table-actions">
+              <button title="Editar"><i class="ti ti-edit"></i></button>
+              <button class="del" title="Eliminar"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; border-top:0.5px solid var(--color-border-tertiary); font-size:13px;">
+            <span>Vitamin C</span>
+            <span style="font-size:12px; color:var(--color-text-secondary);">Facial</span>
+            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+            <div class="admin-table-actions">
+              <button title="Editar"><i class="ti ti-edit"></i></button>
+              <button class="del" title="Eliminar"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-familias -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB: INGREDIENTES
+    ══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-ingredientes" role="tabpanel">
+
+      <!-- Sub-tabs -->
+      <div class="admin-subtabs">
+        <button class="admin-subtab active" data-subtab="ing-ingredientes">Ingredientes</button>
+        <button class="admin-subtab" data-subtab="ing-familias">Familias</button>
+      </div>
+
+      <!-- Sub-panel: Ingredientes -->
+      <div class="subtab-panel active" id="ing-ingredientes">
+        <div class="admin-card">
+          <p class="admin-card__title" style="color:var(--color-text-secondary); font-size:14px;">Ingrediente · crear / editar</p>
+          <div class="grid-2">
+            <div>
+              <label>Familia</label>
+              <select>
+                <option>Hoja</option>
+                <option>Fruta</option>
+                <option>Alga</option>
+                <option>Semilla</option>
+                <option>Mineral</option>
+                <option>Flor</option>
+                <option>Grano</option>
+              </select>
+            </div>
+            <div>
+              <label>Color (heredado de la familia)</label>
+              <div class="flex-row" style="gap:8px;">
+                <input value="#4FAC27" disabled style="font-family:var(--font-mono); background:var(--color-background-secondary); color:var(--color-text-tertiary);">
+                <span style="width:34px;height:34px;border-radius:var(--border-radius-md);background:#4FAC27;border:0.5px solid var(--color-border-tertiary);flex-shrink:0;display:inline-block;"></span>
+                <i class="ti ti-lock" style="font-size:15px; color:var(--color-text-tertiary);"></i>
+              </div>
+            </div>
+            <div>
+              <label>Abreviatura</label>
+              <input type="text" value="Ro" maxlength="3">
+            </div>
+            <div>
+              <label>Nombre (ES)</label>
+              <input type="text" value="Romero">
+            </div>
+            <div>
+              <label>Slug</label>
+              <input type="text" value="romero">
+            </div>
+            <div>
+              <label>Orden en la columna</label>
+              <input type="number" value="4">
+            </div>
+            <div class="col-span-2">
+              <label>Descripción (ES)</label>
+              <textarea style="min-height:42px;" placeholder="Breve descripción del ingrediente..."></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:14px; align-items:flex-end; margin-top:12px; padding-top:12px; border-top:0.5px solid var(--color-border-tertiary);">
+            <div>
+              <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Vista previa del tile</p>
+              <div style="width:62px;height:62px;border-radius:var(--border-radius-md);background:#4FAC27;color:#173404;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <span style="font-size:19px;font-weight:500;line-height:1;">Ro</span>
+                <span style="font-size:9px;">Romero</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button class="btn"><i class="ti ti-upload"></i> Imagen de fondo</button>
+              <button class="btn"><i class="ti ti-upload"></i> Imagen decorativa</button>
+            </div>
+            <button class="btn btn-primary" style="margin-left:auto;">Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-panel: Familias de ingrediente -->
+      <div class="subtab-panel" id="ing-familias" style="display:none;">
+        <div class="admin-card">
+          <p class="admin-card__title" style="color:var(--color-text-secondary); font-size:14px;">Familias de la tabla periódica</p>
+          <p style="font-size:12px; color:var(--color-text-tertiary); margin:0 0 12px;">El color se propaga a todos los ingredientes de la familia.</p>
+
+          <div class="fam-ing-grid fam-ing-head" style="margin-bottom:4px;">
+            <span>Color</span>
+            <span>Nombre (ES)</span>
+            <span>Abrev.</span>
+            <span>Orden</span>
+            <span></span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#4FAC27;"></span>
+              <input value="Hoja">
+              <input value="Ho">
+              <input value="1">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#EF9F27;"></span>
+              <input value="Fruta">
+              <input value="Fr">
+              <input value="2">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#00AFCC;"></span>
+              <input value="Alga">
+              <input value="Al">
+              <input value="3">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#C47A2B;"></span>
+              <input value="Semilla">
+              <input value="Se">
+              <input value="4">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#7D83A2;"></span>
+              <input value="Mineral">
+              <input value="Mi">
+              <input value="5">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#E07898;"></span>
+              <input value="Flor">
+              <input value="Fl">
+              <input value="6">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+            <div class="fam-ing-grid">
+              <span class="fam-color-swatch" style="background:#8B7355;"></span>
+              <input value="Grano">
+              <input value="Gr">
+              <input value="7">
+              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
+            </div>
+          </div>
+
+          <button class="btn" style="font-size:13px; color:var(--color-text-info); margin-top:10px;">
+            <i class="ti ti-plus"></i> Añadir familia
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /tab-ingredientes -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB: CONTENIDO
+    ══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-contenido" role="tabpanel">
+
+      <!-- Quienes Somos -->
+      <div class="admin-card">
+        <p class="admin-card__title">Contenido · Quienes Somos</p>
+
+        <!-- Hero block -->
+        <div style="border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:12px; margin-bottom:12px;">
+          <p class="section-label">Hero</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <input value="Nuestro Manifiesto" placeholder="Título (ES)">
+            <textarea placeholder="Declaración de marca (ES)" style="min-height:40px;">En una Tierra llena de Vida la salud es un estado natural y la belleza su consecuencia</textarea>
+            <button class="btn" style="align-self:flex-start;"><i class="ti ti-upload"></i> Imagen de fondo</button>
+          </div>
+        </div>
+
+        <!-- Narrative blocks -->
+        <p class="section-label">Bloques narrativos</p>
+
+        <div class="content-block-row">
+          <i class="ti ti-grip-vertical drag-handle" style="font-size:18px;"></i>
+          <div class="content-block-info">
+            <p class="content-block-name">Bloque 1</p>
+            <p class="content-block-sub">layout: imagen a la izquierda</p>
+          </div>
+          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:17px;"></i></button>
+          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:17px;"></i></button>
+        </div>
+
+        <div class="content-block-row">
+          <i class="ti ti-grip-vertical drag-handle" style="font-size:18px;"></i>
+          <div class="content-block-info">
+            <p class="content-block-name">Bloque 2</p>
+            <p class="content-block-sub">layout: imagen a la derecha</p>
+          </div>
+          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:17px;"></i></button>
+          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:17px;"></i></button>
+        </div>
+
+        <div class="flex-row--between" style="margin-top:4px;">
+          <button class="btn" style="font-size:13px;color:var(--color-text-info);">
+            <i class="ti ti-plus"></i> Añadir bloque
+          </button>
+          <button class="btn btn-primary">Guardar contenido</button>
+        </div>
+      </div>
+
+    </div><!-- /tab-contenido -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB: BANNERS
+    ══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-banners" role="tabpanel">
+
+      <div class="admin-card">
+        <p class="admin-card__title">Banners</p>
+
+        <!-- Home carousel -->
+        <p class="section-label">Carrusel del home</p>
+
+        <div class="banner-row">
+          <i class="ti ti-grip-vertical drag-handle" style="font-size:16px;"></i>
+          <div class="banner-thumb"><i class="ti ti-photo" style="font-size:14px;"></i></div>
+          <div class="banner-info">
+            <strong>Gel Aloe Vera</strong><br>
+            <span>→ /familias/aloe-vera · desktop + móvil</span>
+          </div>
+          <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:16px;"></i></button>
+          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:16px;"></i></button>
+        </div>
+
+        <div class="banner-row">
+          <i class="ti ti-grip-vertical drag-handle" style="font-size:16px;"></i>
+          <div class="banner-thumb"><i class="ti ti-photo" style="font-size:14px;"></i></div>
+          <div class="banner-info">
+            <strong>Concentrado Argán</strong><br>
+            <span>→ /productos/concentrado-argan · desktop + móvil</span>
+          </div>
+          <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:16px;"></i></button>
+          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:16px;"></i></button>
+        </div>
+
+        <div class="banner-row">
+          <i class="ti ti-grip-vertical drag-handle" style="font-size:16px;"></i>
+          <div class="banner-thumb"><i class="ti ti-photo" style="font-size:14px;"></i></div>
+          <div class="banner-info">
+            <strong>Cuidado Facial · Vitamin C</strong><br>
+            <span>→ /familias/vitamin-c · desktop + móvil</span>
+          </div>
+          <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
+          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:16px;"></i></button>
+          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:16px;"></i></button>
+        </div>
+
+        <button class="btn" style="font-size:13px; color:var(--color-text-info); margin-top:8px;">
+          <i class="ti ti-plus"></i> Añadir slide
+        </button>
+
+        <!-- Category banners -->
+        <p class="section-label" style="margin-top:20px;">Banner de categoría mayor</p>
+        <div class="banner-cat-grid">
+          <div class="banner-cat-card">
+            <div class="banner-cat-thumb"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+            <span class="banner-cat-name">Cuidado Capilar</span>
+            <button class="btn" style="font-size:12px;padding:5px 10px;width:100%;">Editar</button>
+          </div>
+          <div class="banner-cat-card">
+            <div class="banner-cat-thumb"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+            <span class="banner-cat-name">Cuidado Facial</span>
+            <button class="btn" style="font-size:12px;padding:5px 10px;width:100%;">Editar</button>
+          </div>
+          <div class="banner-cat-card">
+            <div class="banner-cat-thumb"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+            <span class="banner-cat-name">Cuidado Corporal</span>
+            <button class="btn" style="font-size:12px;padding:5px 10px;width:100%;">Editar</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /tab-banners -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         TAB: AJUSTES
+    ══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-ajustes" role="tabpanel">
+
+      <div class="admin-card">
+        <p class="admin-card__title">Ajustes</p>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+
+          <!-- EN toggle -->
+          <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--color-border-tertiary); padding-bottom:12px;">
+            <div>
+              <p style="font-size:13px; font-weight:500; margin:0;">Idioma inglés en el público</p>
+              <p style="font-size:12px; color:var(--color-text-secondary); margin:4px 0 0;">ES siempre activo. Activa el switch EN en el sitio.</p>
+            </div>
+            <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
+              <input type="checkbox"> EN desactivado
+            </label>
+          </div>
+
+          <!-- Contact & social -->
+          <div class="grid-2">
+            <div>
+              <label>Email de contacto</label>
+              <input type="email" value="contacto@bio-land.com">
+            </div>
+            <div>
+              <label>Facebook</label>
+              <input type="url" value="facebook.com/biolandoficial">
+            </div>
+            <div>
+              <label>Instagram</label>
+              <input type="url" value="instagram.com/bioland">
+            </div>
+            <div>
+              <label>URL sitio USA (modal país)</label>
+              <input type="url" value="us.bio-land.com">
+            </div>
+          </div>
+
+          <!-- Image presets -->
+          <div>
+            <p class="section-label">Presets de resolución (pipeline WebP)</p>
+            <div class="preset-grid">
+              <div style="display:contents;">
+                <span></span>
+                <span style="font-size:11px;color:var(--color-text-tertiary);text-align:center;">Ancho</span>
+                <span style="font-size:11px;color:var(--color-text-tertiary);text-align:center;">Alto</span>
+              </div>
+              <span class="label">Carrusel desktop</span>
+              <input value="1920">
+              <input value="760">
+              <span class="label">Producto</span>
+              <input value="800">
+              <input value="800">
+              <span class="label">Ingrediente fondo</span>
+              <input value="1920">
+              <input value="700">
+              <span class="label">Categoría mayor</span>
+              <input value="600">
+              <input value="600">
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn btn-primary">Guardar ajustes</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /tab-ajustes -->
+
+  </main><!-- /admin-main -->
+
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL: Editar / Nuevo Producto
+  ══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-product" role="dialog" aria-modal="true" aria-labelledby="modal-product-title">
+    <div class="modal">
+
+      <div class="modal__header">
+        <span class="modal__title" id="modal-product-title">Editar producto</span>
+        <div class="modal__lang">
+          <span>Idioma del formulario</span>
+          <button class="lang-btn active" data-modal-lang="es">ES</button>
+          <button class="lang-btn" data-modal-lang="en">EN</button>
+          <button class="btn btn-ghost" id="modal-product-close" style="padding:4px; border:none;" aria-label="Cerrar">
+            <i class="ti ti-x" style="font-size:18px;"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal__body">
+
+        <!-- Identificación -->
+        <div class="form-section">
+          <p class="form-section__title">Identificación</p>
+          <div class="grid-2">
+            <div>
+              <label>Código (PK)</label>
+              <input type="text" id="mp-codigo" value="PP088936" style="font-family:var(--font-mono);">
+            </div>
+            <div>
+              <label>EAN13 / UPC</label>
+              <input type="text" id="mp-ean" value="7591234567890">
+            </div>
+            <div class="col-span-2">
+              <label>Slug (URL) · autogenerado, editable</label>
+              <input type="text" id="mp-slug" value="gel-aloe-vera">
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos básicos -->
+        <div class="form-section">
+          <p class="form-section__title">
+            Datos básicos
+            <span style="text-transform:none;letter-spacing:0;color:var(--color-text-info);font-weight:400;"> · editando ES</span>
+          </p>
+          <div class="grid-2">
+            <div class="col-span-2">
+              <label>Nombre</label>
+              <input type="text" id="mp-nombre" value="Gel Aloe Vera">
+            </div>
+            <div>
+              <label>Tipo</label>
+              <input type="text" id="mp-tipo" value="Gel Corporal">
+            </div>
+            <div>
+              <label>Tamaño (ml)</label>
+              <input type="number" id="mp-ml" value="300">
+            </div>
+            <div>
+              <label>Categoría</label>
+              <select id="mp-categoria">
+                <option value="capilar">Cuidado Capilar</option>
+                <option value="facial">Cuidado Facial</option>
+                <option value="corporal">Cuidado Corporal</option>
+              </select>
+            </div>
+            <div>
+              <label>Familia (cascada con categoría)</label>
+              <select id="mp-familia">
+                <option>Aloe Vera</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ingrediente principal → badge -->
+        <div class="form-section">
+          <p class="form-section__title">Ingrediente principal → badge</p>
+          <div class="flex-row">
+            <select id="mp-ingrediente" style="flex:1;">
+              <option>Aloe Vera (Av)</option>
+              <option>Romero (Ro)</option>
+              <option>Vitamin C (Vc)</option>
+              <option>Coco (Co)</option>
+            </select>
+            <div class="badge-preview" id="mp-badge-preview" style="background:#4FAC27;color:#173404;">
+              <span class="badge-preview__abbr">Av</span>
+              <span class="badge-preview__name">Aloe Vera</span>
+            </div>
+            <span style="font-size:12px;color:var(--color-text-tertiary);">vista previa</span>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-section">
+          <label>Descripción (ES)</label>
+          <textarea id="mp-descripcion" style="min-height:54px;">La Sábila ha sido por años el secreto de belleza natural para el cabello.</textarea>
+        </div>
+
+        <!-- No contiene / Ingredientes -->
+        <div class="grid-2">
+          <div>
+            <p class="form-section__title" style="font-size:11px;">No contiene <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· un ítem por línea</span></p>
+            <textarea id="mp-no-contiene" style="min-height:90px;">Parabenos
+Sulfatos
+Aceite mineral</textarea>
+          </div>
+          <div>
+            <p class="form-section__title" style="font-size:11px;">Ingredientes <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· párrafo completo</span></p>
+            <textarea id="mp-ingredientes-inci" style="min-height:90px;">Aqua, Aloe Barbadensis Leaf Juice, Glycerin, Carbomer...</textarea>
+          </div>
+        </div>
+
+        <!-- Productos relacionados -->
+        <div class="form-section">
+          <p class="form-section__title">Productos relacionados</p>
+          <div class="tags-wrap">
+            <span class="tag">PP088901 · Gel After Sun <button style="border:none;background:transparent;cursor:pointer;padding:0;font-size:11px;">✕</button></span>
+            <button class="tag-add"><i class="ti ti-plus" style="font-size:12px;"></i> buscar producto</button>
+          </div>
+        </div>
+
+        <!-- Imagen -->
+        <div class="form-section">
+          <p class="form-section__title">Imagen</p>
+          <div class="img-upload-row">
+            <div class="img-thumb"><i class="ti ti-photo" style="font-size:24px;"></i></div>
+            <div style="flex:1;">
+              <button class="btn"><i class="ti ti-upload"></i> Subir / reemplazar</button>
+              <p class="img-hint">Se convierte a WebP · preset "producto" 800×800 · se guarda como <span style="font-family:var(--font-mono);">PP088936.webp</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flags -->
+        <div style="display:flex; gap:18px; align-items:center; padding-top:4px; border-top:0.5px solid var(--color-border-tertiary);">
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
+            <input type="checkbox" checked id="mp-destacado"> Destacado
+          </label>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
+            <input type="checkbox" checked id="mp-activo"> Activo
+          </label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:13px; color:var(--color-text-secondary);">Orden</span>
+            <input type="number" id="mp-orden" value="1" style="width:56px;">
+          </div>
+        </div>
+
+      </div><!-- /modal__body -->
+
+      <div class="modal__footer">
+        <button class="btn" id="modal-product-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="modal-product-save">
+          <i class="ti ti-check"></i> Guardar producto
+        </button>
+      </div>
+
+    </div>
+  </div><!-- /modal-product -->
+
+
+  <!-- Scripts -->
+  <script src="js/admin.js?v=2" type="module"></script>
+
+</body>
+</html>

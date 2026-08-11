@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingredientes — BioLand</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="../assets/css/main.css?v=4">
+  <link rel="stylesheet" href="../assets/css/components.css?v=4">
+  <style>
+    /* ── 1. Featured ingredient header ────────────────── */
+    .ing-header {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      max-height: 640px;
+      overflow: visible;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Clip only the background image, not the decorative cutout */
+    .ing-hero-bg {
+      clip-path: inset(0);
+    }
+    .ing-hero-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      transition: opacity 0.4s;
+    }
+    .ing-hero-overlay {
+      position: absolute;
+      inset: 0;
+      margin: 0 auto;
+      max-width: clamp(480px, 60%, 922px);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      background: rgba(0,0,0,0.18);
+      z-index: 1;
+      overflow: visible;
+    }
+    .ing-hero-cutout {
+      position: absolute;
+      bottom: -48px;
+      right: -8px;
+      width: clamp(240px,22vw,300px);
+      object-fit: contain;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.92;
+    }
+    .ing-featured {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 0 32px;
+      text-align: center;
+      width: 100%;
+      max-width: clamp(480px, 60%, 922px);
+      box-sizing: border-box;
+    }
+    .ing-feat-title {
+      font-size: clamp(28px,4vw,48px);
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .ing-feat-desc {
+      font-size: clamp(14px,1.4vw,20px);
+      line-height: 1.75;
+      color: rgba(255,255,255,0.92);
+      max-width: 520px;
+    }
+
+    /* ── 2. Pill swiper strip (below hero) ───────────── */
+    .ing-swiper-section {
+      background: #fff;
+      padding: 96px 0 32px;
+    }
+    .ing-swiper-wrap {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 0 4px;
+      overflow: hidden;
+    }
+    .ing-swiper .swiper-wrapper {
+      height: 240px;
+      align-items: center;
+    }
+    .ing-swiper .swiper-slide {
+      width: auto;
+      height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      opacity: 0.2;
+      transition: opacity 0.3s;
+    }
+    .ing-swiper .swiper-slide-active { opacity: 1; }
+    .ing-swiper .swiper-slide-active .ing-pill-btn { transform: translateY(-16px); }
+
+    /* ── Flechas: centradas entre card activa y adyacente ── */
+    .ing-swiper .swiper-button-prev,
+    .ing-swiper .swiper-button-next {
+      width: 24px; height: 24px;
+      top: 50%;
+      transform: translateY(-50%) scale(0.6);
+      color: #007AFF;
+    }
+    .ing-swiper .swiper-button-prev { left: calc(50% - 148px); }
+    .ing-swiper .swiper-button-next { right: calc(50% - 148px); left: auto; }
+    .ing-pill-btn {
+      width: 98px; height: 110px;
+      display: flex; flex-direction: column;
+      align-items: flex-start; justify-content: flex-start;
+      padding: 4px 16px;
+      border-bottom-right-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      cursor: pointer;
+      border: none;
+      text-align: left;
+      transition: transform 0.3s, box-shadow 0.3s, width 0.3s, height 0.3s;
+      flex-shrink: 0;
+    }
+    .ing-pill-btn:hover { transform: scale(1.05); }
+    .ing-swiper .swiper-slide-active .ing-pill-btn {
+      width: 110px;
+      height: 130px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+    .ing-pill-btn__abbr { font-size: 32px; font-weight: 700; color: #fff; line-height: 1.1; }
+    .ing-pill-btn__name { font-size: 11px; color: #fff; line-height: 1.3; }
+
+    /* ── 3. Category table (small pills) ─────────────── */
+    .ing-table-section {
+      padding: 0 0 32px;
+      overflow-x: auto;
+    }
+    .ing-table {
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+      justify-content: center;
+      padding: 16px 16px 8px;
+      flex-wrap: wrap;
+    }
+    .ing-col { display: flex; flex-direction: column; }
+    .ing-col-pill {
+      width: 98px; height: 110px;
+      display: flex; flex-direction: column;
+      align-items: flex-start; justify-content: flex-start;
+      padding: 4px 16px;
+      border-bottom-right-radius: 16px;
+      margin: 4px;
+      cursor: pointer;
+      border: none;
+      text-align: left;
+      transition: transform 0.15s;
+    }
+    .ing-col-pill:hover { transform: scale(1.06); }
+    .ing-col-pill--header {
+      background: #fff !important;
+      border: 2px solid transparent; /* color set inline */
+      cursor: default;
+      opacity: 1;
+    }
+    .ing-col-pill--header .ing-col-pill__abbr,
+    .ing-col-pill--header .ing-col-pill__name { color: inherit; }
+    .ing-col-pill:hover:not(.ing-col-pill--header) { transform: scale(1.06); }
+    .ing-col-pill__abbr { font-size: 32px; font-weight: 700; line-height: 1.1; }
+    .ing-col-pill__name { font-size: 11px; line-height: 1.3; }
+
+    /* ── 4. Related products ──────────────────────────── */
+    .related-section { padding: 48px 0 80px; }
+    .related-section h2 {
+      font-size: clamp(28px,4vw,48px);
+      font-weight: 700;
+      color: var(--brand);
+      padding: 0 16px;
+      margin-bottom: 48px;
+    }
+    .related-swiper-wrap {
+      position: relative; overflow: hidden; padding: 0 40px;
+    }
+    .related-swiper-grad-r {
+      position: absolute; top: 0; right: 0; height: 100%;
+      width: 200px; background: linear-gradient(to left, #fff, transparent);
+      z-index: 10; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <script src="../components/header.js?v=4" data-root=".."></script>
+
+  <main class="padding-for-nav fade-in">
+
+    <!-- ── 1. Featured header ──────────────────────────── -->
+    <header class="ing-header">
+      <!-- Background photo -->
+      <img class="ing-hero-bg" id="ing-bg-img"
+           src="https://admin.bio-land.com/wp-content/uploads/2024/09/AdobeStock_311238682_11zon-scaled.jpeg"
+           alt="">
+      <!-- Blurred center overlay + plant cutout anchored to its corner -->
+      <div class="ing-hero-overlay">
+        <img class="ing-hero-cutout"
+             src="https://admin.bio-land.com/wp-content/uploads/2024/09/AdobeStock_541135147_web.png"
+             alt="">
+      </div>
+      <!-- Content -->
+      <div class="ing-featured">
+        <h2 class="ing-feat-title" id="feat-name">ROMERO</h2>
+        <p class="ing-feat-desc" id="feat-desc">El romero es conocido por su efecto estimulante y revitalizante, ayudando a mejorar la apariencia general y proporcionando una sensación de frescura. Su capacidad para mejorar la circulación contribuye a una experiencia de bienestar, dejando un aspecto más saludable. Además, es apreciado por su acción purificadora, que ayuda a equilibrar y tonificar de manera natural.</p>
+      </div>
+    </header>
+
+    <!-- ── 2. Pill swiper (below hero) ───────────────────── -->
+    <div class="ing-swiper-section">
+      <div class="ing-swiper-wrap">
+        <div class="swiper ing-swiper" id="ing-swiper">
+          <div class="swiper-wrapper" id="ing-swiper-wrapper"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. Category table ────────────────────────────── -->
+    <div class="ing-table-section">
+      <div class="ing-table" id="ing-table"></div>
+    </div>
+
+    <!-- ── 3. Related products ─────────────────────────── -->
+    <section class="related-section container mx-auto">
+      <h2>Relacionados</h2>
+      <div class="related-swiper-wrap">
+        <div class="related-swiper-grad-r"></div>
+        <div class="swiper related-swiper">
+          <div class="swiper-wrapper" style="align-items:center;">
+            <div class="swiper-slide" style="max-width:265px;padding-bottom:48px;margin-right:20px;">
+              <a class="product-card-link" href="producto.html">
+                <div class="product-card-img-wrap">
+                  <img src="https://admin.bio-land.com/wp-content/uploads/2024/09/Artboard-1-copy-24-1.jpg" alt="Romero Control Caída" class="product-card-img">
+                </div>
+                <h4 class="product-card-name">Romero Control Caída</h4>
+                <p class="product-card-type">Shampoo</p>
+                <p class="product-card-volume">400ml</p>
+              </a>
+            </div>
+            <div class="swiper-slide" style="max-width:265px;padding-bottom:48px;margin-right:20px;">
+              <a class="product-card-link" href="producto.html">
+                <div class="product-card-img-wrap">
+                  <img src="https://admin.bio-land.com/wp-content/uploads/2024/09/Artboard-1-copy-25-1.jpg" alt="Romero Control Caída" class="product-card-img">
+                </div>
+                <h4 class="product-card-name">Romero Control Caída</h4>
+                <p class="product-card-type">Acondicionador</p>
+                <p class="product-card-volume">400ml</p>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="../components/footer.js" data-root=".."></script>
+  <script src="../assets/js/main.js"></script>
+  <script>
+    // ── Data ──────────────────────────────────────────────
+    const DESCS = {
+      'Romero': 'El romero es conocido por su efecto estimulante y revitalizante, ayudando a mejorar la apariencia general y proporcionando una sensación de frescura. Su capacidad para mejorar la circulación contribuye a una experiencia de bienestar, dejando un aspecto más saludable. Además, es apreciado por su acción purificadora, que ayuda a equilibrar y tonificar de manera natural.',
+      'Argán': 'El aceite de argán es rico en ácidos grasos esenciales y vitamina E, proporcionando hidratación profunda y brillo intenso. Conocido como el "oro líquido" de Marruecos, nutre y restaura el cabello y la piel dañados.',
+      'Aloe Vera': 'El aloe vera hidrata y calma de manera natural. Con propiedades antiinflamatorias y regeneradoras, es ideal para pieles y cabellos sensibles, aportando frescura y suavidad.',
+      'Coco': 'El aceite de coco penetra profundamente en la fibra capilar, aportando brillo intenso y reduciendo la pérdida de proteínas. Su textura nutritiva fortalece y protege desde la primera aplicación.',
+      'Keratina': 'La keratina es la proteína estructural del cabello. Su aplicación externa ayuda a reconstruir la fibra capilar dañada, aportando suavidad, brillo y control del frizz de forma duradera.',
+      'Manzanilla': 'La manzanilla es conocida por sus propiedades calmantes y suavizantes. Ilumina el cabello rubio y claro de manera natural, aportando suavidad y brillo.',
+      'Linaza': 'La linaza es rica en ácidos omega-3 que nutren y definen los rizos. Proporciona una fijación natural y flexible, ideal para cabellos ondulados y rizados.',
+      'Colágeno Vegetal': 'El colágeno vegetal aporta firmeza y elasticidad, ayudando a mantener la estructura de la piel y el cabello. Alternativa sostenible y efectiva al colágeno animal.',
+      'Bamboo': 'El bamboo es una fuente de sílice que fortalece la fibra capilar y aporta elasticidad. Ayuda a prevenir la rotura del cabello y aporta un brillo natural y saludable.',
+      'Ortiga': 'La ortiga es rica en minerales y vitaminas que estimulan el crecimiento capilar y reducen la caída. Purifica el cuero cabelludo y aporta vitalidad al cabello.',
+      'Açaí': 'El açaí es uno de los frutos con mayor concentración de antioxidantes. Protege el cabello y la piel del daño ambiental, aportando nutrición y brillo intenso.',
+      'Karité': 'La manteca de karité es profundamente nutritiva e hidratante. Protege y suaviza el cabello más seco y frágil, aportando elasticidad y brillo natural.',
+      'Almendras': 'El aceite de almendras dulces es ligero y nutritivo. Rico en vitaminas A, B y E, hidrata sin engrasar y aporta brillo y suavidad al cabello.',
+    };
+    const DEFAULT_DESC = 'Ingrediente natural seleccionado cuidadosamente para aportar propiedades únicas a cada producto BioLand, en armonía con nuestra filosofía de cuidado natural y sostenible.';
+
+    const CATEGORIES = [
+      { label: 'Gr', name: 'Grano', color: '#E2BD74',
+        pills: [{ abbr: 'Ke', name: 'Keratina' }] },
+      { label: 'Fl', name: 'Flor', color: '#EB76AB',
+        pills: [{ abbr: 'Mz', name: 'Manzanilla' }, { abbr: 'Ve', name: 'Verbena' }, { abbr: 'Rs', name: 'Rosa' }] },
+      { label: 'Ag', name: 'Alga', color: '#00AFCC',
+        pills: [{ abbr: 'Cv', name: 'Colágeno Vegetal' }, { abbr: 'Al', name: 'Algas' }, { abbr: 'Es', name: 'Espirulina' }] },
+      { label: 'Hj', name: 'Hoja', color: '#4FAC27',
+        pills: [{ abbr: 'Av', name: 'Aloe Vera' }, { abbr: 'Té', name: 'Árbol de Té' }, { abbr: 'Or', name: 'Ortiga' }, { abbr: 'Ro', name: 'Romero' }, { abbr: 'Bo', name: 'Bamboo' }] },
+      { label: 'Mi', name: 'Mineral', color: '#6C6C6C',
+        pills: [{ abbr: 'Am', name: 'Agua Micelar' }, { abbr: 'Ac', name: 'Arcilla' }, { abbr: 'Be', name: 'Bentonita' }, { abbr: 'Bs', name: 'Bicarbonato de Sodio' }, { abbr: 'Ca', name: 'Carbón Activado' }, { abbr: 'Mn', name: 'Minerales' }] },
+      { label: 'Sm', name: 'Semilla', color: '#BF895A',
+        pills: [{ abbr: 'Ar', name: 'Argán' }, { abbr: 'Li', name: 'Linaza' }, { abbr: 'Am', name: 'Almendras' }, { abbr: 'Kt', name: 'Karité' }, { abbr: 'Nu', name: 'Nuez' }, { abbr: 'Rm', name: 'Rosa Mosqueta' }, { abbr: 'Ae', name: 'Avena' }] },
+      { label: 'Fr', name: 'Fruta', color: '#FBB500',
+        pills: [{ abbr: 'Aç', name: 'Açaí' }, { abbr: 'Co', name: 'Coco' }, { abbr: 'Aq', name: 'Albaricoque' }, { abbr: 'An', name: 'Arándanos' }, { abbr: 'Kw', name: 'Kiwi' }, { abbr: 'Na', name: 'Naranja Amarga' }, { abbr: 'Pm', name: 'Pomelo' }, { abbr: 'Pe', name: 'Pepino' }, { abbr: 'Vc', name: 'Vitamina C' }] },
+    ];
+
+    // ── Build flat list of all pills (for swiper) ─────────
+    const ALL_PILLS = [];
+    CATEGORIES.forEach(cat => {
+      cat.pills.forEach(p => ALL_PILLS.push({ ...p, color: cat.color }));
+    });
+    const ROMERO_IDX = ALL_PILLS.findIndex(p => p.name === 'Romero');
+
+    // ── Update featured section ───────────────────────────
+    function selectIngredient(pill) {
+      document.getElementById('feat-name').textContent = pill.name.toUpperCase();
+      document.getElementById('feat-desc').textContent = DESCS[pill.name] || DEFAULT_DESC;
+    }
+
+    // ── Build swiper slides ───────────────────────────────
+    const swiperWrapper = document.getElementById('ing-swiper-wrapper');
+    ALL_PILLS.forEach(p => {
+      const slide = document.createElement('div');
+      slide.className = 'swiper-slide';
+      const btn = document.createElement('button');
+      btn.className = 'ing-pill-btn';
+      btn.style.background = p.color;
+      btn.innerHTML = `<span class="ing-pill-btn__abbr">${p.abbr}</span><span class="ing-pill-btn__name">${p.name}</span>`;
+      btn.addEventListener('click', () => selectIngredient(p));
+      slide.appendChild(btn);
+      swiperWrapper.appendChild(slide);
+    });
+
+    // ── Init swiper ───────────────────────────────────────
+    const ingSwiper = new Swiper('#ing-swiper', {
+      slidesPerView: 'auto',
+      centeredSlides: true,
+      initialSlide: ROMERO_IDX,
+      spaceBetween: 112,
+      grabCursor: true,
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      on: {
+        slideChange(sw) {
+          selectIngredient(ALL_PILLS[sw.activeIndex]);
+        }
+      }
+    });
+
+    // ── Build category table ──────────────────────────────
+    const ingTable = document.getElementById('ing-table');
+    CATEGORIES.forEach(cat => {
+      const col = document.createElement('div');
+      col.className = 'ing-col';
+
+      // Header (white bg + colored border + colored text)
+      const hdr = document.createElement('button');
+      hdr.className = 'ing-col-pill ing-col-pill--header';
+      hdr.style.borderColor = cat.color;
+      hdr.style.color = cat.color;
+      hdr.innerHTML = `<span class="ing-col-pill__abbr" style="color:${cat.color}">${cat.label}</span><span class="ing-col-pill__name" style="color:${cat.color}">${cat.name}</span>`;
+      col.appendChild(hdr);
+
+      // Ingredient pills — filled style (fiel al original)
+      cat.pills.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'ing-col-pill';
+        btn.style.background = cat.color;
+        btn.style.border = 'none';
+        btn.innerHTML = `<span class="ing-col-pill__abbr" style="color:#fff">${p.abbr}</span><span class="ing-col-pill__name" style="color:#fff">${p.name}</span>`;
+        btn.addEventListener('click', () => {
+          selectIngredient({ ...p, color: cat.color });
+          // Jump swiper to this pill
+          const idx = ALL_PILLS.findIndex(ap => ap.name === p.name);
+          if (idx >= 0) ingSwiper.slideTo(idx);
+        });
+        col.appendChild(btn);
+      });
+
+      ingTable.appendChild(col);
+    });
+
+    // ── Related swiper ────────────────────────────────────
+    new Swiper('.related-swiper', {
+      slidesPerView: 'auto',
+      spaceBetween: 20,
+      grabCursor: true,
+    });
+  </script>
+</body>
+</html>

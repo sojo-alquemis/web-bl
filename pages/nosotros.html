@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quienes Somos — BioLand</title>
+  <link rel="stylesheet" href="../assets/css/main.css?v=4">
+  <link rel="stylesheet" href="../assets/css/components.css?v=4">
+  <style>
+    /* ── About Hero ─────────────────────────────────────── */
+    .about-hero {
+      position: relative;
+      height: 100vh;
+      max-height: 800px;
+      background: url('../assets/img/about-us/header.webp') center top / cover no-repeat;
+      overflow: visible;
+    }
+    /* fade image to white at bottom (real site: image is calc(100%-75px) tall) */
+    .about-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.8) 70%, #fff 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .about-hero__leaves {
+      position: absolute; inset: 0; pointer-events: none; overflow: visible;
+    }
+    .about-hero__leaf {
+      position: absolute;
+      opacity: 0.9;
+      will-change: transform;
+      z-index: 3;
+    }
+    .about-hero__card {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      max-width: 920px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 64px 32px 96px;
+      background: radial-gradient(90.16% 143.01% at 15.32% 21.04%, rgba(165,239,255,0.2) 0%, rgba(110,191,244,0.043) 77.08%, rgba(70,144,213,0) 100%);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      text-align: center;
+    }
+    .about-hero__card h2 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      margin-bottom: 24px;
+    }
+    .about-hero__card .quote {
+      font-size: clamp(18px,2vw,22px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .about-hero__card .subquote {
+      font-size: clamp(16px,2vw,22px);
+      color: #fff;
+      line-height: 1.7;
+    }
+
+    /* ── Timeline section ───────────────────────────────── */
+    .about-timeline {
+      background: #fff;
+      padding-top: 0;
+      padding-bottom: 192px;
+      padding-inline: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-timeline__floating {
+      position: absolute; pointer-events: none; overflow: hidden; inset: 0;
+    }
+    .about-timeline__floating-leaf {
+      position: absolute; opacity: 0.75;
+    }
+    .about-timeline__title {
+      text-align: center;
+      font-size: 52px;
+      font-weight: 400;
+      color: #4fac27;
+      padding: 48px 0 24px;
+    }
+    .about-timeline__title span {
+      font-weight: 400;
+    }
+    .about-timeline__title strong {
+      font-weight: 700;
+    }
+
+    /* vertical line container */
+    .timeline-track {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 920px;
+      margin: 0 auto;
+      gap: 0;
+    }
+    .timeline-vline {
+      width: 1px;
+      height: 48px;
+      background: #ccc;
+      flex-shrink: 0;
+    }
+    .timeline-vline--short { height: 24px; }
+    .timeline-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      color: #4fac27;
+      flex-shrink: 0;
+    }
+    .timeline-icon svg {
+      width: 28px; height: 28px; fill: #4fac27;
+    }
+    .timeline-photo {
+      width: 100%;
+      border-radius: 0;
+      overflow: hidden;
+      margin: 0;
+    }
+    .timeline-photo img {
+      width: 100%; height: auto;
+      display: block;
+      object-fit: cover;
+    }
+    .timeline-caption {
+      text-align: center;
+      font-size: 20px;
+      line-height: 1.7;
+      color: #555;
+      padding: 16px 8px 0;
+      max-width: 700px;
+    }
+    .timeline-caption strong {
+      color: #4fac27;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <script src="../components/header.js?v=4" data-root=".."></script>
+
+  <main class="padding-for-nav fade-in">
+
+    <!-- ── Hero ─────────────────────────────────────────── -->
+    <section class="about-hero">
+      <!-- Floating leaves on hero -->
+      <div class="about-hero__leaves">
+        <!-- top corners -->
+        <img class="about-hero__leaf" src="../assets/img/about-us/leaf-1.webp" alt="" data-speed="0.35" data-rotate="-20deg" style="left:-4%;top:-8%;width:280px;transform:rotate(-20deg);">
+        <img class="about-hero__leaf" src="../assets/img/about-us/leaf-2.webp" alt="" data-speed="0.55" data-rotate="30deg"  style="right:-3%;top:-6%;width:350px;transform:rotate(30deg);">
+        <!-- bottom corners -->
+        <img class="about-hero__leaf" src="../assets/img/about-us/leaf-3.webp" alt="" data-speed="0.20" data-rotate="160deg" style="left:-5%;bottom:-5%;width:260px;transform:rotate(160deg);">
+        <img class="about-hero__leaf" src="../assets/img/about-us/leaf-4.webp" alt="" data-speed="0.30" data-rotate="-155deg" style="right:-4%;bottom:-8%;width:300px;transform:rotate(-155deg);">
+        <img class="about-hero__leaf" src="../assets/img/about-us/leaf-5.webp" alt="" data-speed="0.15" data-rotate="140deg" style="left:18%;bottom:-12%;width:200px;transform:rotate(140deg);">
+      </div>
+
+      <div class="about-hero__card">
+        <h2>Nuestro Manifiesto</h2>
+        <p class="quote">En una Tierra llena de Vida la salud es un estado natural y la belleza su consecuencia.</p>
+        <p class="subquote">En una Tierra llena de Vida somos uno; nuestro cuerpo, nuestra consciencia y nuestro planeta.</p>
+      </div>
+    </section>
+
+    <!-- ── Timeline ──────────────────────────────────────── -->
+    <section class="about-timeline">
+
+      <!-- Floating leaves on timeline -->
+      <div class="about-timeline__floating">
+        <img class="about-timeline__floating-leaf" src="../assets/img/about-us/leaf-5.webp" alt="" data-speed="0.40" data-rotate="20deg"  style="left:-3%;top:5%;width:300px;transform:rotate(20deg);">
+        <img class="about-timeline__floating-leaf" src="../assets/img/about-us/leaf-6.webp" alt="" data-speed="0.28" data-rotate="-15deg" style="right:-2%;top:10%;width:260px;transform:rotate(-15deg);">
+        <img class="about-timeline__floating-leaf" src="../assets/img/about-us/leaf-7.webp" alt="" data-speed="0.50" data-rotate="10deg"  style="left:-4%;top:28%;width:240px;transform:rotate(10deg);">
+        <img class="about-timeline__floating-leaf" src="../assets/img/about-us/leaf-8.webp" alt="" data-speed="0.35" data-rotate="-20deg" style="right:-2%;top:42%;width:280px;transform:rotate(-20deg);">
+        <img class="about-timeline__floating-leaf" src="../assets/img/about-us/leaf-9.webp" alt="" data-speed="0.45" data-rotate="5deg"   style="left:-3%;top:62%;width:250px;transform:rotate(5deg);">
+        <img class="about-timeline__floating-leaf" src="../assets/img/about-us/leaf-1.webp" alt="" data-speed="0.30" data-rotate="25deg"  style="right:-1%;top:74%;width:220px;transform:rotate(25deg);">
+      </div>
+
+      <h2 class="about-timeline__title"><span>En una tierra </span><strong>llena de vida</strong></h2>
+
+      <div class="timeline-track">
+
+        <!-- Montañas -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <!-- plant sprout icon -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22V12M12 12C12 12 8 8 4 9C4 9 5 14 12 12ZM12 12C12 12 16 8 20 9C20 9 19 14 12 12Z"/><path d="M12 22C12 22 12 17 12 12" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M12 10C10 8 6 8.5 4.5 9.5C4.5 9.5 5.5 13.5 12 11" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 10C14 8 18 8.5 19.5 9.5C19.5 9.5 18.5 13.5 12 11" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/montañas.webp" alt="Montañas">
+        </div>
+        <p class="timeline-caption">
+          En una Tierra llena de Vida <strong>respiramos en armonía con nuestra naturaleza.</strong> Nos alimentamos de su pureza, nos nutrimos de su verdad.
+        </p>
+
+        <!-- Aloe -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C12 22 4 18 4 10C4 10 8 8 12 10C16 8 20 10 20 10C20 18 12 22 12 22Z" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/Aloe.webp" alt="Aloe Vera">
+        </div>
+        <p class="timeline-caption">
+          En una Tierra llena de Vida <strong>nada sabe artificial. Porque lo que ves es lo que es.</strong> Las frutas y las hierbas son nuestros ingredientes activos, no una fórmula.
+        </p>
+
+        <!-- Tierra -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" stroke="#4fac27" stroke-width="1.5" fill="none"/><path d="M12 4C12 4 8 8 8 12C8 16 12 20 12 20" stroke="#4fac27" stroke-width="1.5" fill="none"/><path d="M4 12H20" stroke="#4fac27" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/tierra.webp" alt="Tierra">
+        </div>
+        <p class="timeline-caption">
+          <strong>No hay que decir "sin"</strong> tantas veces para darnos tranquilidad.
+        </p>
+
+        <!-- Agua -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L5 12C5 16.4 8.1 20 12 20C15.9 20 19 16.4 19 12L12 3Z" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/agua.webp" alt="Agua">
+        </div>
+        <p class="timeline-caption">
+          En una Tierra llena de Vida <strong>los productos son cristalinos.</strong> Abonamos nuestra piel con nutrientes vivos y sabiduría ancestral.
+        </p>
+
+        <!-- Hoja -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C12 22 4 18 4 10C4 10 8 8 12 10C16 8 20 10 20 10C20 18 12 22 12 22Z" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 22L12 14" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/hoja.webp" alt="Hoja">
+        </div>
+        <p class="timeline-caption">
+          <strong>Aquí el "brillo natural" no es una metáfora,</strong> ni la lozanía una ilusión pasajera.
+        </p>
+
+        <!-- Venado -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C10 3 9 5 9 5C7 4 5 5 5 7C5 9 7 9 7 9L5 12L7 13L9 10C9 10 10 12 12 12C14 12 15 10 15 10L17 13L19 12L17 9C17 9 19 9 19 7C19 5 17 4 15 5C15 5 14 3 12 3Z" stroke="#4fac27" stroke-width="1.5" fill="none"/><path d="M12 12V20" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/venado.webp" alt="Venado">
+        </div>
+        <p class="timeline-caption">
+          En una Tierra llena de Vida, <strong>los animales tienen el derecho a ser libres y amados.</strong> En una Tierra llena de Vida no hay que persuadir para reciclar, ni dar medallas para no contaminar.
+        </p>
+
+        <!-- Romero -->
+        <div class="timeline-vline"></div>
+        <div class="timeline-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22V12M12 12C12 12 8 8 4 9C4 9 5 14 12 12ZM12 12C12 12 16 8 20 9C20 9 19 14 12 12Z" stroke="#4fac27" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="timeline-vline--short timeline-vline"></div>
+        <div class="timeline-photo">
+          <img src="../assets/img/about-us/romero.webp" alt="Romero">
+        </div>
+        <p class="timeline-caption">
+          En una Tierra llena de Vida <strong>la salud es un estado natural y la belleza su consecuencia.</strong> En una Tierra llena de Vida somos uno; nuestro cuerpo nuestra consciencia y nuestro planeta.
+        </p>
+
+        <div class="timeline-vline"></div>
+
+      </div><!-- end .timeline-track -->
+    </section>
+
+  </main>
+
+  <script src="../components/footer.js" data-root=".."></script>
+  <script src="../assets/js/main.js"></script>
+  <script>
+    // ── Parallax leaves ──────────────────────────────────
+    // Fórmula por-hoja: el offset es proporcional a la distancia
+    // entre el centro natural de cada hoja y el centro del viewport.
+    // Resultado: cada hoja tiene su propio timing y el movimiento es
+    // visible sin importar la altura de la sección.
+    (function() {
+      const leaves = document.querySelectorAll('[data-speed]');
+      const originsY = new Map();
+      let ticking = false;
+
+      // Capturar posición natural de cada hoja en la página (una sola vez)
+      function initOrigins() {
+        leaves.forEach(leaf => {
+          const rect = leaf.getBoundingClientRect();
+          originsY.set(leaf, window.scrollY + rect.top + rect.height / 2);
+        });
+      }
+
+      function updateLeaves() {
+        const scrollY = window.scrollY;
+        const vh      = window.innerHeight;
+        const vCenter = scrollY + vh / 2;
+
+        leaves.forEach(leaf => {
+          const speed  = parseFloat(leaf.dataset.speed || 0);
+          const rotate = leaf.dataset.rotate || '0deg';
+
+          // Distancia entre el centro natural de la hoja y el centro del viewport
+          const dist   = (originsY.get(leaf) || 0) - vCenter;
+
+          // La hoja se mueve OPUESTO a la distancia → efecto flotante lento
+          // Multiplier 0.45 controla la intensidad; speed escala por hoja
+          const offset = -dist * speed * 0.9;
+
+          leaf.style.transform = `rotate(${rotate}) translateY(${offset}px)`;
+        });
+
+        ticking = false;
+      }
+
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          requestAnimationFrame(updateLeaves);
+          ticking = true;
+        }
+      }, { passive: true });
+
+      // Inicializar después de que el layout esté listo
+      if (document.readyState === 'complete') {
+        initOrigins(); updateLeaves();
+      } else {
+        window.addEventListener('load', () => { initOrigins(); updateLeaves(); });
+      }
+    })();
+  </script>
+</body>
+</html>
