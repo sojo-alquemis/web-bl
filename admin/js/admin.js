@@ -1596,6 +1596,8 @@ let _currentEditBannerId    = null;
 let _pendingBannerDesktopUrl = null;
 let _pendingBannerMobileUrl  = null;
 
+const modalBannerOverlay = document.getElementById('modal-banner');
+
 // ── Carrusel del home ─────────────────────────────────────
 
 function _buildBannerRow(b) {
@@ -1633,13 +1635,14 @@ function _renderBannersTable() {
   if (count) count.textContent = `(${_allBanners.length})`;
 
   wrap.querySelectorAll('[data-ban-edit]').forEach(btn => {
-    btn.addEventListener('click', () => _openBannerForm(btn.dataset.banEdit));
+    btn.addEventListener('click', () => openBannerModal(btn.dataset.banEdit));
   });
   wrap.querySelectorAll('[data-ban-delete]').forEach(btn => {
     btn.addEventListener('click', () => _deleteBannerTab(btn.dataset.banDelete));
   });
 }
 
+/** Deja el formulario del modal en blanco, listo para crear un slide nuevo. */
 function _clearBannerForm() {
   _currentEditBannerId = null;
   _pendingBannerDesktopUrl = null;
@@ -1655,36 +1658,42 @@ function _clearBannerForm() {
   document.getElementById('ban-mobile-thumb').innerHTML  = `<i class="ti ti-photo" style="font-size:18px;"></i>`;
   const statusEl = document.getElementById('ban-imagen-status');
   if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
-  const cancelBtn = document.getElementById('ban-cancel');
-  if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
-function _openBannerForm(id) {
-  const b = _allBanners.find(x => x.id === id);
-  if (!b) return;
-  _currentEditBannerId = b.id;
-  _pendingBannerDesktopUrl = null;
-  _pendingBannerMobileUrl  = null;
+/** Abre el modal de slide — vacío si id es null (nuevo), o con los datos existentes si se pasa un id (editar). */
+function openBannerModal(id) {
+  if (id) {
+    const b = _allBanners.find(x => x.id === id);
+    if (!b) return;
+    _currentEditBannerId = b.id;
+    _pendingBannerDesktopUrl = null;
+    _pendingBannerMobileUrl  = null;
 
-  const titleEl = document.getElementById('ban-form-title');
-  if (titleEl) titleEl.textContent = `Carrusel del home · editando "${b.titulo_es || b.id}"`;
-  document.getElementById('ban-titulo-es').value = b.titulo_es || '';
-  document.getElementById('ban-titulo-en').value = b.titulo_en || '';
-  document.getElementById('ban-enlace').value    = b.enlace_url || '';
-  document.getElementById('ban-orden').value      = b.orden ?? 0;
-  document.getElementById('ban-activo').checked  = b.activo ?? true;
-  document.getElementById('ban-desktop-thumb').innerHTML = b.imagen_desktop_url
-    ? `<img src="${b.imagen_desktop_url}" alt="" style="width:100%;height:100%;object-fit:cover;">`
-    : `<i class="ti ti-photo" style="font-size:18px;"></i>`;
-  document.getElementById('ban-mobile-thumb').innerHTML = b.imagen_mobile_url
-    ? `<img src="${b.imagen_mobile_url}" alt="" style="width:100%;height:100%;object-fit:cover;">`
-    : `<i class="ti ti-photo" style="font-size:18px;"></i>`;
-  const statusEl = document.getElementById('ban-imagen-status');
-  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
-  const cancelBtn = document.getElementById('ban-cancel');
-  if (cancelBtn) cancelBtn.style.display = '';
+    const titleEl = document.getElementById('ban-form-title');
+    if (titleEl) titleEl.textContent = `Carrusel del home · editando "${b.titulo_es || b.id}"`;
+    document.getElementById('ban-titulo-es').value = b.titulo_es || '';
+    document.getElementById('ban-titulo-en').value = b.titulo_en || '';
+    document.getElementById('ban-enlace').value    = b.enlace_url || '';
+    document.getElementById('ban-orden').value      = b.orden ?? 0;
+    document.getElementById('ban-activo').checked  = b.activo ?? true;
+    document.getElementById('ban-desktop-thumb').innerHTML = b.imagen_desktop_url
+      ? `<img src="${b.imagen_desktop_url}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+      : `<i class="ti ti-photo" style="font-size:18px;"></i>`;
+    document.getElementById('ban-mobile-thumb').innerHTML = b.imagen_mobile_url
+      ? `<img src="${b.imagen_mobile_url}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+      : `<i class="ti ti-photo" style="font-size:18px;"></i>`;
+    const statusEl = document.getElementById('ban-imagen-status');
+    if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+  } else {
+    _clearBannerForm();
+  }
+  modalBannerOverlay?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 
-  document.getElementById('ban-titulo-es')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+function closeBannerModal() {
+  modalBannerOverlay?.classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 async function _deleteBannerTab(id) {
@@ -1699,7 +1708,7 @@ async function _deleteBannerTab(id) {
     }
     _allBanners = _allBanners.filter(x => x.id !== id);
     _renderBannersTable();
-    if (_currentEditBannerId === id) _clearBannerForm();
+    if (_currentEditBannerId === id) closeBannerModal();
   } catch (err) {
     console.error('[admin] Error al eliminar banner:', err);
     await showAlert(`Error al eliminar: ${err.message}`);
@@ -1721,7 +1730,15 @@ async function _loadBannersTab() {
   }
 }
 
-document.getElementById('ban-cancel')?.addEventListener('click', _clearBannerForm);
+document.getElementById('btn-new-banner')?.addEventListener('click', () => openBannerModal(null));
+document.getElementById('modal-banner-close')?.addEventListener('click', closeBannerModal);
+document.getElementById('ban-cancel')?.addEventListener('click', closeBannerModal);
+modalBannerOverlay?.addEventListener('click', (e) => {
+  if (e.target === modalBannerOverlay) closeBannerModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modalBannerOverlay?.classList.contains('open')) closeBannerModal();
+});
 
 document.getElementById('ban-desktop-btn')?.addEventListener('click', () => document.getElementById('ban-desktop-input')?.click());
 document.getElementById('ban-mobile-btn')?.addEventListener('click', () => document.getElementById('ban-mobile-input')?.click());
@@ -1808,7 +1825,7 @@ document.getElementById('ban-save')?.addEventListener('click', async () => {
     if (idx >= 0) _allBanners[idx] = displayBanner; else _allBanners.push(displayBanner);
 
     _renderBannersTable();
-    _clearBannerForm();
+    closeBannerModal();
   } catch (err) {
     console.error('[admin] Error al guardar banner:', err);
     await showAlert(`Error al guardar: ${err.message}`);

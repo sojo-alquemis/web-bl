@@ -300,53 +300,14 @@
     ══════════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-banners" role="tabpanel">
 
-      <!-- Home carousel — form -->
-      <div class="admin-card">
-        <p class="admin-card__title" id="ban-form-title">Carrusel del home · nuevo slide</p>
-        <div class="grid-2">
-          <div>
-            <label>Título (ES)</label>
-            <input type="text" id="ban-titulo-es" placeholder="Gel Aloe Vera">
-          </div>
-          <div>
-            <label>Título (EN)</label>
-            <input type="text" id="ban-titulo-en" placeholder="Aloe Vera Gel">
-          </div>
-          <div class="col-span-2">
-            <label>Enlace (ruta del sitio al hacer clic)</label>
-            <input type="text" id="ban-enlace" placeholder="/familias/aloe-vera">
-          </div>
-          <div>
-            <label>Orden</label>
-            <input type="number" id="ban-orden" value="0">
-          </div>
-        </div>
-
-        <div class="flex-row" style="margin-top:12px; gap:14px;">
-          <div>
-            <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Desktop · 1920×760</p>
-            <div class="img-thumb" id="ban-desktop-thumb" style="width:96px;height:56px;"><i class="ti ti-photo" style="font-size:18px;"></i></div>
-            <button class="btn" id="ban-desktop-btn" type="button" style="margin-top:6px;font-size:12px;"><i class="ti ti-upload"></i> Subir</button>
-            <input type="file" id="ban-desktop-input" accept="image/*" style="display:none;">
-          </div>
-          <div>
-            <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Móvil · 768×900</p>
-            <div class="img-thumb" id="ban-mobile-thumb" style="width:56px;height:56px;"><i class="ti ti-photo" style="font-size:18px;"></i></div>
-            <button class="btn" id="ban-mobile-btn" type="button" style="margin-top:6px;font-size:12px;"><i class="ti ti-upload"></i> Subir</button>
-            <input type="file" id="ban-mobile-input" accept="image/*" style="display:none;">
-          </div>
-          <span id="ban-imagen-status" style="display:none;font-size:12px;align-self:center;"></span>
-          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; align-self:center;">
-            <input type="checkbox" id="ban-activo" checked> Activo
-          </label>
-          <button class="btn" id="ban-cancel" type="button" style="display:none;align-self:center;">Cancelar edición</button>
-          <button class="btn btn-primary" id="ban-save" type="button" style="align-self:center;">Guardar</button>
-        </div>
+      <!-- Home carousel — toolbar -->
+      <div class="flex-row--between" style="margin-bottom:12px;">
+        <span style="font-weight:500;">Carrusel del home <span id="ban-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></span>
+        <button class="btn btn-primary" id="btn-new-banner" type="button"><i class="ti ti-plus"></i> Nuevo slide</button>
       </div>
 
       <!-- Home carousel — list -->
       <div class="admin-card">
-        <p class="admin-card__title">Carrusel del home <span id="ban-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></p>
         <div id="ban-table-body"></div>
       </div>
 
@@ -359,6 +320,69 @@
       </div>
 
     </div><!-- /tab-banners -->
+
+    <!-- ══════════════════════════════════════════════════════
+         MODAL: Editar / Nuevo slide del carrusel del home
+    ══════════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="modal-banner" role="dialog" aria-modal="true" aria-labelledby="ban-form-title">
+      <div class="modal">
+
+        <div class="modal__header">
+          <span class="modal__title" id="ban-form-title">Carrusel del home · nuevo slide</span>
+          <button class="btn btn-ghost" id="modal-banner-close" style="padding:4px; border:none;" aria-label="Cerrar">
+            <i class="ti ti-x" style="font-size:18px;"></i>
+          </button>
+        </div>
+
+        <div class="modal__body">
+          <div class="grid-2">
+            <div>
+              <label>Título (ES)</label>
+              <input type="text" id="ban-titulo-es" placeholder="Gel Aloe Vera">
+            </div>
+            <div>
+              <label>Título (EN)</label>
+              <input type="text" id="ban-titulo-en" placeholder="Aloe Vera Gel">
+            </div>
+            <div class="col-span-2">
+              <label>Enlace (ruta del sitio al hacer clic)</label>
+              <input type="text" id="ban-enlace" placeholder="/familias/aloe-vera">
+            </div>
+            <div>
+              <label>Orden</label>
+              <input type="number" id="ban-orden" value="0">
+            </div>
+          </div>
+
+          <div class="flex-row" style="margin-top:12px; gap:14px; flex-wrap:wrap;">
+            <div>
+              <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Desktop · 1920×760</p>
+              <div class="img-thumb" id="ban-desktop-thumb" style="width:96px;height:56px;"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+              <button class="btn" id="ban-desktop-btn" type="button" style="margin-top:6px;font-size:12px;"><i class="ti ti-upload"></i> Subir</button>
+              <input type="file" id="ban-desktop-input" accept="image/*" style="display:none;">
+            </div>
+            <div>
+              <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Móvil · 768×900</p>
+              <div class="img-thumb" id="ban-mobile-thumb" style="width:56px;height:56px;"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+              <button class="btn" id="ban-mobile-btn" type="button" style="margin-top:6px;font-size:12px;"><i class="ti ti-upload"></i> Subir</button>
+              <input type="file" id="ban-mobile-input" accept="image/*" style="display:none;">
+            </div>
+            <span id="ban-imagen-status" style="display:none;font-size:12px;align-self:center;"></span>
+            <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; align-self:center;">
+              <input type="checkbox" id="ban-activo" checked> Activo
+            </label>
+          </div>
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn" id="ban-cancel" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="ban-save" type="button">
+            <i class="ti ti-check"></i> Guardar slide
+          </button>
+        </div>
+
+      </div>
+    </div><!-- /modal-banner -->
 
 
     <!-- ══════════════════════════════════════════════════════
