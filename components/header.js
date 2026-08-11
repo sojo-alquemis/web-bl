@@ -80,7 +80,7 @@
   nav.innerHTML = `
     <div class="site-header__inner">
       <a aria-label="Home" class="site-header__logo" href="${root}/index.html">
-        <img src="${root}/assets/img/bioland-logo-nav.svg" alt="Bioland Logo" width="120" height="24">
+        <img src="${root}/assets/img/branding/bioland-logo-nav.svg" alt="Bioland Logo" width="120" height="24">
       </a>
 
       <nav class="site-header__nav">

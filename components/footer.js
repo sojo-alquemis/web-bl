@@ -10,7 +10,7 @@
   footer.innerHTML = `
     <div class="site-footer__inner">
       <div class="site-footer__logo-side">
-        <img src="${root}/assets/img/bioland-logo.svg" alt="Bioland Logo" width="320" height="65"
+        <img src="${root}/assets/img/branding/bioland-logo.svg" alt="Bioland Logo" width="320" height="65"
              style="filter:brightness(0) invert(1); max-width:230px; width:100%;">
       </div>
       <div class="site-footer__links-side">

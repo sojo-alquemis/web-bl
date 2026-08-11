@@ -5,6 +5,7 @@
 
 import { getProductos, getFamilias, getIngredientes, upsertProducto, USE_MOCK } from '../assets/js/db.js';
 import { parseProductosWorkbook, buildProductosWorkbook } from '../assets/js/excel-catalogo.js';
+import { processImageToWebp, uploadProductoImagen, productImageCaption } from '../assets/js/image-upload.js';
 
 // ── Auth guard ──────────────────────────────────────────────
 const session = sessionStorage.getItem('bl_admin_session');
@@ -228,6 +229,13 @@ const MP_FIELD_MAP = {
 };
 const MP_CHECK_MAP = { 'mp-destacado': 'destacado', 'mp-activo': 'activo' };
 
+// Estado del producto que se está editando (null = creando uno nuevo).
+// Con esto: el código solo es editable al crear, nunca al editar (evita
+// cambiar la PK por accidente), y el chequeo de "código duplicado" sabe
+// contra qué código NO comparar (el propio, si se está editando).
+let _currentEditCodigo = null;
+let _pendingImagenUrl  = null; // URL resultante de la última imagen subida en este modal
+
 function _fillProductForm(producto) {
   const p = producto || {};
   for (const [id, field] of Object.entries(MP_FIELD_MAP)) {
@@ -242,10 +250,28 @@ function _fillProductForm(producto) {
   if (catEl) catEl.value = p.categoria?.slug || '';
   // familia / ingrediente principal: selects estáticos por ahora (Fase 5
   // los llena dinámicamente desde getFamilias()/getIngredientes()).
+
+  // Código: editable solo al crear (producto === null). Al editar, la PK
+  // no se puede tocar desde este formulario.
+  const codigoEl = document.getElementById('mp-codigo');
+  if (codigoEl) codigoEl.readOnly = !!producto;
+
+  // Imagen: refleja la que ya tiene el producto (si la tiene) y resetea
+  // el estado de "pendiente por subir" — cada apertura del modal empieza limpia.
+  _pendingImagenUrl = null;
+  const thumb  = document.getElementById('mp-imagen-thumb');
+  const status = document.getElementById('mp-imagen-status');
+  if (thumb) {
+    thumb.innerHTML = p.imagen_url
+      ? `<img src="${p.imagen_url}" alt="" style="width:100%;height:100%;object-fit:contain;">`
+      : `<i class="ti ti-photo" style="font-size:24px;"></i>`;
+  }
+  if (status) { status.style.display = 'none'; status.textContent = ''; }
 }
 
 function openProductModal(codigo) {
   const producto = codigo ? _allProductos.find(p => p.codigo === codigo) : null;
+  _currentEditCodigo = producto ? producto.codigo : null;
   if (modalTitle) {
     modalTitle.textContent = producto ? `Editar producto — ${producto.codigo}` : 'Nuevo producto';
   }
@@ -275,6 +301,23 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('modal-product-save')?.addEventListener('click', () => {
+  const codigo = document.getElementById('mp-codigo')?.value.trim() || '';
+
+  // Regla: no se puede crear (ni guardar) un producto sin código.
+  if (!codigo) {
+    alert('Debes ingresar un código antes de guardar el producto.');
+    document.getElementById('mp-codigo')?.focus();
+    return;
+  }
+  // Regla: no se puede crear un código que ya existe (solo aplica al crear;
+  // al editar, el campo código es readOnly y siempre es el mismo).
+  const esNuevo = !_currentEditCodigo;
+  if (esNuevo && _allProductos.some(p => p.codigo === codigo)) {
+    alert(`Ya existe un producto con el código "${codigo}".`);
+    document.getElementById('mp-codigo')?.focus();
+    return;
+  }
+
   const producto = {};
   for (const [id, field] of Object.entries(MP_FIELD_MAP)) {
     producto[field] = document.getElementById(id)?.value ?? null;
@@ -283,10 +326,64 @@ document.getElementById('modal-product-save')?.addEventListener('click', () => {
     producto[field] = document.getElementById(id)?.checked ?? false;
   }
   producto.categoria_slug = document.getElementById('mp-categoria')?.value || null;
+  if (_pendingImagenUrl) producto.imagen_url = _pendingImagenUrl;
   // TODO Fase 5: resolver familia_id/ingrediente_principal_id desde los
   // selects (hoy son estáticos) y llamar upsertProducto(producto).
   console.log('[admin] producto a guardar (Fase 5 hará el upsert real):', producto);
   alert('TODO Fase 5: falta conectar el guardado real con Supabase.');
+});
+
+// ── Imagen del producto (un producto = una sola imagen) ─────
+const mpImagenBtn    = document.getElementById('mp-imagen-btn');
+const mpImagenInput  = document.getElementById('mp-imagen-input');
+const mpImagenHint   = document.getElementById('mp-imagen-hint');
+const mpImagenStatus = document.getElementById('mp-imagen-status');
+const mpImagenThumb  = document.getElementById('mp-imagen-thumb');
+
+if (mpImagenHint) {
+  mpImagenHint.textContent = `${productImageCaption()} Ingresa el código del producto antes de subir la imagen.`;
+}
+
+mpImagenBtn?.addEventListener('click', () => mpImagenInput?.click());
+
+mpImagenInput?.addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  mpImagenInput.value = '';
+  if (!file) return;
+
+  const codigo = document.getElementById('mp-codigo')?.value.trim() || '';
+  if (!codigo) {
+    alert('Ingresa el código del producto antes de subir la imagen (el archivo se nombra con ese código).');
+    return;
+  }
+
+  function setStatus(text, tone) {
+    if (!mpImagenStatus) return;
+    mpImagenStatus.style.display = 'block';
+    mpImagenStatus.textContent = text;
+    mpImagenStatus.style.color = tone === 'error' ? 'var(--color-text-danger)' : 'var(--color-text-info)';
+  }
+
+  try {
+    setStatus('Procesando imagen (recorte + WebP)…');
+    const blob = await processImageToWebp(file);
+    setStatus('Subiendo…');
+    const { ok, url, error } = await uploadProductoImagen(codigo, blob);
+    if (!ok) { setStatus(`Error al subir: ${error?.message || 'desconocido'}`, 'error'); return; }
+
+    _pendingImagenUrl = url;
+    if (mpImagenThumb) {
+      mpImagenThumb.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
+    }
+    setStatus(
+      USE_MOCK
+        ? `Vista previa lista (modo mock, no se subió a ningún Storage real) · se guardará como ${codigo}.webp`
+        : `Imagen lista · se guardó como productos/${codigo}.webp`
+    );
+  } catch (err) {
+    console.error('[admin] Error procesando/subiendo imagen:', err);
+    setStatus(`Error: ${err.message}`, 'error');
+  }
 });
 
 // ══════════════════════════════════════════════════════════

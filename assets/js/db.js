@@ -39,8 +39,8 @@ const CATALOGO_SOURCE = 'site';
 
 // ── ② Credenciales Supabase ────────────────────────────────────
 // DB propia del sitio (banners, categorías, promesas, contenido, config)
-const SITE_URL = 'https://TU_PROJECT.supabase.co';  // TODO
-const SITE_KEY = 'TU_ANON_KEY';                      // TODO
+const SITE_URL = 'https://egnavsbbmkurxntkpfuo.supabase.co';
+const SITE_KEY = 'sb_publishable_KAgp4vYNyNcbHwOoEmGTjg_FOKv1C79';
 
 // DB de ACS (catálogo de productos) — llenar cuando ACS esté ordenada
 const ACS_URL  = '';  // TODO Fase futura
@@ -75,6 +75,15 @@ function _catalogoClient() {
  */
 export async function getSiteClient() {
   return _client('site');
+}
+
+/**
+ * Cliente Supabase de la DB de catálogo, para uso externo (ej. subir
+ * imágenes de producto al bucket "media"). Sigue el mismo toggle
+ * CATALOGO_SOURCE que el resto de las funciones de catálogo.
+ */
+export async function getCatalogoClient() {
+  return _catalogoClient();
 }
 
 // ══════════════════════════════════════════════════════════════
