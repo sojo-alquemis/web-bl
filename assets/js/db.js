@@ -30,7 +30,7 @@ import {
 } from '../../data/productos.mock.js';  // ajustar ruta relativa al importador
 
 // ── ① TOGGLES AQUÍ ────────────────────────────────────────────
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 
 // De dónde viene el CATÁLOGO (productos, familias, ingredientes).
 // 'site' = misma DB que el resto del sitio (hoy)
