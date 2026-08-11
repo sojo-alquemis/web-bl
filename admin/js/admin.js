@@ -3,7 +3,7 @@
    ES Module — importa capa de datos desde db.js
    ============================================================ */
 
-import { getProductos, getFamilias, getIngredientes, upsertProducto, USE_MOCK } from '../../assets/js/db.js';
+import { getProductos, getFamilias, getIngredientes, upsertProducto, deleteProducto, USE_MOCK } from '../../assets/js/db.js';
 import { parseProductosWorkbook, buildProductosWorkbook } from '../../assets/js/excel-catalogo.js';
 import { processImageToWebp, uploadProductoImagen, productImageCaption } from '../../assets/js/image-upload.js';
 
@@ -57,10 +57,15 @@ if (hash) {
 // TOGGLE DE IDIOMA
 // ══════════════════════════════════════════════════════════
 
-document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
+// Nota: el toggle superior (data-lang) y el del modal (data-modal-lang) usan
+// atributos distintos en dashboard.html — se manejan ambos con el mismo
+// selector para que los dos respondan visualmente al click. Hoy el toggle
+// es solo cosmético (marca cuál botón está activo); todavía no cambia el
+// idioma de los datos mostrados/editados — eso es Fase 5 (ver 01_DECISIONS.md).
+document.querySelectorAll('.lang-btn[data-lang], .lang-btn[data-modal-lang]').forEach(btn => {
   btn.addEventListener('click', () => {
     const parent = btn.closest('.admin-tabs__lang, .modal__lang');
-    parent?.querySelectorAll('.lang-btn[data-lang]').forEach(b => b.classList.remove('active'));
+    parent?.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   });
 });
@@ -88,6 +93,14 @@ document.querySelectorAll('.admin-subtab[data-subtab]').forEach(btn => {
 // Estado local
 let _allProductos = [];
 let _searchQuery  = '';
+let _filterCat    = ''; // slug de categoría ('' = todas)
+let _filterFam    = ''; // slug de familia ('' = todas)
+let _filterEstado = ''; // '1' activos, '0' inactivos, '' = todos
+
+// Cache de familias/ingredientes (para poblar selects del modal y de los
+// filtros de la tabla, y para resolver slug → id al guardar un producto).
+let _allFamilias    = [];
+let _allIngredientes = [];
 
 /**
  * Construye una fila de la tabla para un producto normalizado.
@@ -133,14 +146,23 @@ function _renderTable() {
   if (!wrap) return;
 
   const q = _searchQuery.toLowerCase().trim();
-  const filtered = q
-    ? _allProductos.filter(p =>
-        p.codigo.toLowerCase().includes(q)     ||
-        p.nombre_es.toLowerCase().includes(q)  ||
-        (p.tipo_es || '').toLowerCase().includes(q) ||
-        (p.familia?.nombre_es || '').toLowerCase().includes(q)
-      )
-    : _allProductos;
+  const hayFiltros = !!(q || _filterCat || _filterFam || _filterEstado !== '');
+
+  let filtered = _allProductos;
+  if (q) {
+    filtered = filtered.filter(p =>
+      p.codigo.toLowerCase().includes(q)     ||
+      p.nombre_es.toLowerCase().includes(q)  ||
+      (p.tipo_es || '').toLowerCase().includes(q) ||
+      (p.familia?.nombre_es || '').toLowerCase().includes(q)
+    );
+  }
+  if (_filterCat)    filtered = filtered.filter(p => p.categoria?.slug === _filterCat);
+  if (_filterFam)    filtered = filtered.filter(p => p.familia?.slug === _filterFam);
+  if (_filterEstado !== '') {
+    const activoBuscado = _filterEstado === '1';
+    filtered = filtered.filter(p => !!p.activo === activoBuscado);
+  }
 
   // Mantener el thead y agregar filas después
   const head = wrap.querySelector('.admin-table-head');
@@ -158,13 +180,35 @@ function _renderTable() {
   }
 
   if (count) {
-    count.textContent = `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}${q ? ` · filtrado de ${_allProductos.length}` : ''}`;
+    count.textContent = `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}${hayFiltros ? ` · filtrado de ${_allProductos.length}` : ''}`;
   }
 
   // Delegar clicks de editar/eliminar
   wrap.querySelectorAll('[data-edit]').forEach(btn => {
     btn.addEventListener('click', () => openProductModal(btn.dataset.edit));
   });
+  wrap.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', () => _deleteProducto(btn.dataset.delete));
+  });
+}
+
+/** Elimina un producto (confirmación → DB si no es mock → estado local → re-render). */
+async function _deleteProducto(codigo) {
+  const producto = _allProductos.find(p => p.codigo === codigo);
+  const nombre = producto ? `${codigo} — ${producto.nombre_es}` : codigo;
+  if (!window.confirm(`¿Eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`)) return;
+
+  try {
+    if (!USE_MOCK) {
+      const { ok, error } = await deleteProducto(codigo);
+      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+    }
+    _allProductos = _allProductos.filter(p => p.codigo !== codigo);
+    _renderTable();
+  } catch (err) {
+    console.error('[admin] Error al eliminar producto:', err);
+    alert(`Error al eliminar: ${err.message}`);
+  }
 }
 
 /** Carga inicial desde db.js */
@@ -188,12 +232,49 @@ async function _loadProductos() {
   }
 }
 
+/**
+ * Carga familias e ingredientes una vez (para los filtros de la tabla y
+ * los selects del modal de producto) y puebla el select de familia del
+ * toolbar de Productos.
+ */
+async function _loadCatalogoAuxiliar() {
+  try {
+    [_allFamilias, _allIngredientes] = await Promise.all([getFamilias(), getIngredientes()]);
+  } catch (err) {
+    console.error('[admin] Error cargando familias/ingredientes:', err);
+    _allFamilias = [];
+    _allIngredientes = [];
+  }
+  const famFilterEl = document.getElementById('prod-filter-fam');
+  if (famFilterEl) {
+    famFilterEl.innerHTML = '<option value="">Familia: todas</option>' +
+      _allFamilias.map(f => `<option value="${f.slug}">${f.nombre_es}</option>`).join('');
+  }
+  _populateModalFamiliaSelect();
+  _populateModalIngredienteSelect();
+}
+
 // Arrancar carga
 _loadProductos();
+_loadCatalogoAuxiliar();
 
 // Búsqueda en tiempo real
 document.getElementById('prod-search')?.addEventListener('input', (e) => {
   _searchQuery = e.target.value;
+  _renderTable();
+});
+
+// Filtros de categoría / familia / estado
+document.getElementById('prod-filter-cat')?.addEventListener('change', (e) => {
+  _filterCat = e.target.value;
+  _renderTable();
+});
+document.getElementById('prod-filter-fam')?.addEventListener('change', (e) => {
+  _filterFam = e.target.value;
+  _renderTable();
+});
+document.getElementById('prod-filter-estado')?.addEventListener('change', (e) => {
+  _filterEstado = e.target.value;
   _renderTable();
 });
 
@@ -236,6 +317,66 @@ const MP_CHECK_MAP = { 'mp-destacado': 'destacado', 'mp-activo': 'activo' };
 let _currentEditCodigo = null;
 let _pendingImagenUrl  = null; // URL resultante de la última imagen subida en este modal
 
+/**
+ * Puebla el select de familia del modal. Si se pasa una categoría, filtra
+ * la lista a solo las familias de esa categoría ("cascada con categoría").
+ * `selected` es el slug de familia a dejar marcado (si existe en la lista).
+ */
+function _populateModalFamiliaSelect(categoriaSlug = '', selected = '') {
+  const el = document.getElementById('mp-familia');
+  if (!el) return;
+  // Nota de forma de dato: en mock, f.categoria es el slug (string) crudo;
+  // en real, _attachCategoria() lo convierte en {slug, nombre_es}. Se
+  // soportan ambas formas para que el filtro funcione en los dos modos.
+  const _famCatSlug = (f) => (typeof f.categoria === 'string' ? f.categoria : f.categoria?.slug) || f.categoria_slug || '';
+  const lista = categoriaSlug
+    ? _allFamilias.filter(f => _famCatSlug(f) === categoriaSlug)
+    : _allFamilias;
+  el.innerHTML = '<option value="">— Sin familia —</option>' +
+    lista.map(f => `<option value="${f.slug}">${f.nombre_es}</option>`).join('');
+  el.value = lista.some(f => f.slug === selected) ? selected : '';
+}
+
+/** Puebla el select de ingrediente principal del modal. */
+function _populateModalIngredienteSelect(selected = '') {
+  const el = document.getElementById('mp-ingrediente');
+  if (!el) return;
+  el.innerHTML = '<option value="">— Sin ingrediente principal —</option>' +
+    _allIngredientes.map(i => `<option value="${i.slug}">${i.nombre_es} (${i.abreviatura})</option>`).join('');
+  el.value = selected;
+  _updateBadgePreview(selected);
+}
+
+/** Refleja el color/abreviatura/nombre del ingrediente elegido en el badge de vista previa. */
+function _updateBadgePreview(slug) {
+  const badge = document.getElementById('mp-badge-preview');
+  if (!badge) return;
+  const ing = _allIngredientes.find(i => i.slug === slug);
+  const abrEl    = badge.querySelector('.badge-preview__abbr');
+  const nameEl   = badge.querySelector('.badge-preview__name');
+  if (!ing) {
+    badge.style.background = '#888';
+    badge.style.color = '#fff';
+    if (abrEl)  abrEl.textContent  = '—';
+    if (nameEl) nameEl.textContent = 'Sin ingrediente';
+    return;
+  }
+  badge.style.background = ing.color       || '#888';
+  badge.style.color      = ing.color_texto || '#fff';
+  if (abrEl)  abrEl.textContent  = ing.abreviatura;
+  if (nameEl) nameEl.textContent = ing.nombre_es;
+}
+
+document.getElementById('mp-ingrediente')?.addEventListener('change', (e) => {
+  _updateBadgePreview(e.target.value);
+});
+
+document.getElementById('mp-categoria')?.addEventListener('change', (e) => {
+  // Al cambiar de categoría en el modal, refiltra las familias disponibles
+  // (la familia elegida previamente puede ya no aplicar).
+  _populateModalFamiliaSelect(e.target.value, '');
+});
+
 function _fillProductForm(producto) {
   const p = producto || {};
   for (const [id, field] of Object.entries(MP_FIELD_MAP)) {
@@ -247,9 +388,12 @@ function _fillProductForm(producto) {
     if (el) el.checked = field === 'activo' ? (p[field] ?? true) : !!p[field];
   }
   const catEl = document.getElementById('mp-categoria');
-  if (catEl) catEl.value = p.categoria?.slug || '';
-  // familia / ingrediente principal: selects estáticos por ahora (Fase 5
-  // los llena dinámicamente desde getFamilias()/getIngredientes()).
+  const categoriaSlug = p.categoria?.slug || '';
+  if (catEl) catEl.value = categoriaSlug;
+  // familia / ingrediente principal: selects poblados dinámicamente desde
+  // getFamilias()/getIngredientes() (cacheados en _allFamilias/_allIngredientes).
+  _populateModalFamiliaSelect(categoriaSlug, p.familia?.slug || '');
+  _populateModalIngredienteSelect(p.ingrediente_principal?.slug || '');
 
   // Código: editable solo al crear (producto === null). Al editar, la PK
   // no se puede tocar desde este formulario.
@@ -300,7 +444,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeProductModal();
 });
 
-document.getElementById('modal-product-save')?.addEventListener('click', () => {
+const MP_NUMBER_FIELDS = new Set(['tamano_ml', 'orden']);
+
+document.getElementById('modal-product-save')?.addEventListener('click', async () => {
   const codigo = document.getElementById('mp-codigo')?.value.trim() || '';
 
   // Regla: no se puede crear (ni guardar) un producto sin código.
@@ -318,19 +464,70 @@ document.getElementById('modal-product-save')?.addEventListener('click', () => {
     return;
   }
 
+  const existente = !esNuevo ? _allProductos.find(p => p.codigo === _currentEditCodigo) : null;
+
   const producto = {};
   for (const [id, field] of Object.entries(MP_FIELD_MAP)) {
-    producto[field] = document.getElementById(id)?.value ?? null;
+    const raw = document.getElementById(id)?.value ?? '';
+    if (MP_NUMBER_FIELDS.has(field)) {
+      producto[field] = raw === '' ? null : Number(raw);
+    } else {
+      producto[field] = raw === '' ? null : raw;
+    }
   }
   for (const [id, field] of Object.entries(MP_CHECK_MAP)) {
     producto[field] = document.getElementById(id)?.checked ?? false;
   }
-  producto.categoria_slug = document.getElementById('mp-categoria')?.value || null;
-  if (_pendingImagenUrl) producto.imagen_url = _pendingImagenUrl;
-  // TODO Fase 5: resolver familia_id/ingrediente_principal_id desde los
-  // selects (hoy son estáticos) y llamar upsertProducto(producto).
-  console.log('[admin] producto a guardar (Fase 5 hará el upsert real):', producto);
-  alert('TODO Fase 5: falta conectar el guardado real con Supabase.');
+  const categoriaSlug = document.getElementById('mp-categoria')?.value || null;
+  const familiaSlug     = document.getElementById('mp-familia')?.value || '';
+  const ingredienteSlug = document.getElementById('mp-ingrediente')?.value || '';
+  producto.categoria_slug = categoriaSlug;
+
+  // Resolver slug → id para las FKs reales (en mock, id no existe y se usa
+  // el propio slug como valor — igual que hace el importador de Excel).
+  const familiaMap     = new Map(_allFamilias.map(f => [f.slug, f.id ?? f.slug]));
+  const ingredienteMap = new Map(_allIngredientes.map(i => [i.slug, i.id ?? i.slug]));
+  producto.familia_id             = familiaSlug     ? (familiaMap.get(familiaSlug)     ?? null) : null;
+  producto.ingrediente_principal_id = ingredienteSlug ? (ingredienteMap.get(ingredienteSlug) ?? null) : null;
+
+  // La imagen: si se subió una nueva en este modal, se usa esa URL; si no,
+  // se conserva la que ya tenía el producto (no se debe borrar por accidente).
+  producto.imagen_url = _pendingImagenUrl || existente?.imagen_url || null;
+
+  try {
+    if (!USE_MOCK) {
+      const { ok, error } = await upsertProducto({ codigo, ...producto });
+      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+    }
+
+    // Reconstruir la forma "con joins" para reflejarlo de inmediato en la
+    // tabla local, sin esperar un recargo completo desde la DB.
+    const familiaObj     = _allFamilias.find(f => f.slug === familiaSlug);
+    const ingredienteObj = _allIngredientes.find(i => i.slug === ingredienteSlug);
+    const catOptionText  = document.querySelector('#mp-categoria option:checked')?.textContent || categoriaSlug;
+
+    const displayProducto = {
+      ...(existente || {}),
+      ...producto,
+      codigo,
+      familia: familiaObj
+        ? { slug: familiaObj.slug, nombre_es: familiaObj.nombre_es, imagen_url: familiaObj.imagen_url || null }
+        : null,
+      ingrediente_principal: ingredienteObj
+        ? { slug: ingredienteObj.slug, abreviatura: ingredienteObj.abreviatura, nombre_es: ingredienteObj.nombre_es, color: ingredienteObj.color, color_texto: ingredienteObj.color_texto }
+        : null,
+      categoria: categoriaSlug ? { slug: categoriaSlug, nombre_es: catOptionText } : null,
+    };
+
+    const idx = _allProductos.findIndex(p => p.codigo === codigo);
+    if (idx >= 0) _allProductos[idx] = displayProducto; else _allProductos.push(displayProducto);
+
+    _renderTable();
+    closeProductModal();
+  } catch (err) {
+    console.error('[admin] Error al guardar producto:', err);
+    alert(`Error al guardar: ${err.message}`);
+  }
 });
 
 // ── Imagen del producto (un producto = una sola imagen) ─────
