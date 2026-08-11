@@ -117,83 +117,57 @@
     <div class="tab-panel" id="tab-familias" role="tabpanel">
 
       <div class="admin-card">
-        <p class="admin-card__title">Familia de producto · crear / editar</p>
+        <p class="admin-card__title" id="fam-form-title">Familia de producto · nueva</p>
         <div class="grid-2">
           <div>
             <label>Categoría (agrupa)</label>
-            <select>
-              <option>Cuidado Capilar</option>
-              <option>Cuidado Facial</option>
-              <option>Cuidado Corporal</option>
+            <select id="fam-categoria">
+              <option value="capilar">Cuidado Capilar</option>
+              <option value="facial">Cuidado Facial</option>
+              <option value="corporal">Cuidado Corporal</option>
             </select>
           </div>
           <div>
             <label>Nombre</label>
-            <input type="text" placeholder="Infusión de Romero">
+            <input type="text" id="fam-nombre" placeholder="Infusión de Romero">
           </div>
           <div>
             <label>Slug</label>
-            <input type="text" placeholder="infusion-de-romero">
+            <input type="text" id="fam-slug" placeholder="infusion-de-romero">
           </div>
           <div>
             <label>Orden</label>
-            <input type="number" value="7">
+            <input type="number" id="fam-orden" value="0">
           </div>
           <div class="col-span-2">
             <label>Descripción (opcional)</label>
-            <textarea placeholder="Descripción de la familia..." style="min-height:40px;"></textarea>
+            <textarea id="fam-descripcion" placeholder="Descripción de la familia..." style="min-height:40px;"></textarea>
           </div>
         </div>
 
         <div class="flex-row" style="margin-top:12px;">
-          <div class="img-thumb" style="width:56px;height:56px;">
+          <div class="img-thumb" id="fam-imagen-thumb" style="width:56px;height:56px;">
             <i class="ti ti-photo" style="font-size:22px;"></i>
           </div>
-          <button class="btn"><i class="ti ti-upload"></i> Imagen</button>
+          <button class="btn" id="fam-imagen-btn" type="button"><i class="ti ti-upload"></i> Imagen</button>
+          <input type="file" id="fam-imagen-input" accept="image/*" style="display:none;">
+          <span id="fam-imagen-status" style="display:none;font-size:12px;"></span>
           <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
-            <input type="checkbox" checked> Activa
+            <input type="checkbox" id="fam-activo" checked> Activa
           </label>
-          <button class="btn btn-primary">Guardar</button>
+          <button class="btn" id="fam-cancel" type="button" style="display:none;">Cancelar edición</button>
+          <button class="btn btn-primary" id="fam-save" type="button">Guardar</button>
         </div>
       </div>
 
       <!-- Families list table -->
       <div class="admin-card">
-        <p class="admin-card__title">Familias existentes</p>
+        <p class="admin-card__title">Familias existentes <span id="fam-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></p>
         <div class="admin-table-wrap">
-          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; background:var(--color-background-secondary); font-size:11px; color:var(--color-text-tertiary);">
+          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; background:var(--color-background-secondary); font-size:11px; color:var(--color-text-tertiary);" id="fam-table-head">
             <span>Nombre</span><span>Categoría</span><span>Imagen</span><span>Activa</span><span></span>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; border-top:0.5px solid var(--color-border-tertiary); font-size:13px;">
-            <span>Aceite de Coco</span>
-            <span style="font-size:12px; color:var(--color-text-secondary);">Capilar</span>
-            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-            <div class="admin-table-actions">
-              <button title="Editar"><i class="ti ti-edit"></i></button>
-              <button class="del" title="Eliminar"><i class="ti ti-trash"></i></button>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; border-top:0.5px solid var(--color-border-tertiary); font-size:13px;">
-            <span>Aloe Vera</span>
-            <span style="font-size:12px; color:var(--color-text-secondary);">Capilar</span>
-            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-            <div class="admin-table-actions">
-              <button title="Editar"><i class="ti ti-edit"></i></button>
-              <button class="del" title="Eliminar"><i class="ti ti-trash"></i></button>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; border-top:0.5px solid var(--color-border-tertiary); font-size:13px;">
-            <span>Vitamin C</span>
-            <span style="font-size:12px; color:var(--color-text-secondary);">Facial</span>
-            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-            <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-            <div class="admin-table-actions">
-              <button title="Editar"><i class="ti ti-edit"></i></button>
-              <button class="del" title="Eliminar"><i class="ti ti-trash"></i></button>
-            </div>
-          </div>
+          <div id="fam-table-body"></div>
         </div>
       </div>
 
@@ -214,63 +188,78 @@
       <!-- Sub-panel: Ingredientes -->
       <div class="subtab-panel active" id="ing-ingredientes">
         <div class="admin-card">
-          <p class="admin-card__title" style="color:var(--color-text-secondary); font-size:14px;">Ingrediente · crear / editar</p>
+          <p class="admin-card__title" id="ing-form-title" style="color:var(--color-text-secondary); font-size:14px;">Ingrediente · nuevo</p>
           <div class="grid-2">
             <div>
               <label>Familia</label>
-              <select>
-                <option>Hoja</option>
-                <option>Fruta</option>
-                <option>Alga</option>
-                <option>Semilla</option>
-                <option>Mineral</option>
-                <option>Flor</option>
-                <option>Grano</option>
-              </select>
+              <select id="ing-familia"></select>
             </div>
             <div>
               <label>Color (heredado de la familia)</label>
               <div class="flex-row" style="gap:8px;">
-                <input value="#4FAC27" disabled style="font-family:var(--font-mono); background:var(--color-background-secondary); color:var(--color-text-tertiary);">
-                <span style="width:34px;height:34px;border-radius:var(--border-radius-md);background:#4FAC27;border:0.5px solid var(--color-border-tertiary);flex-shrink:0;display:inline-block;"></span>
+                <input id="ing-color-input" value="#888888" disabled style="font-family:var(--font-mono); background:var(--color-background-secondary); color:var(--color-text-tertiary);">
+                <span id="ing-color-swatch" style="width:34px;height:34px;border-radius:var(--border-radius-md);background:#888888;border:0.5px solid var(--color-border-tertiary);flex-shrink:0;display:inline-block;"></span>
                 <i class="ti ti-lock" style="font-size:15px; color:var(--color-text-tertiary);"></i>
               </div>
             </div>
             <div>
               <label>Abreviatura</label>
-              <input type="text" value="Ro" maxlength="3">
+              <input type="text" id="ing-abreviatura" maxlength="3" placeholder="Ro">
             </div>
             <div>
               <label>Nombre (ES)</label>
-              <input type="text" value="Romero">
+              <input type="text" id="ing-nombre" placeholder="Romero">
             </div>
             <div>
               <label>Slug</label>
-              <input type="text" value="romero">
+              <input type="text" id="ing-slug" placeholder="romero">
             </div>
             <div>
               <label>Orden en la columna</label>
-              <input type="number" value="4">
+              <input type="number" id="ing-orden" value="0">
             </div>
             <div class="col-span-2">
               <label>Descripción (ES)</label>
-              <textarea style="min-height:42px;" placeholder="Breve descripción del ingrediente..."></textarea>
+              <textarea id="ing-descripcion" style="min-height:42px;" placeholder="Breve descripción del ingrediente..."></textarea>
             </div>
           </div>
 
           <div style="display:flex; gap:14px; align-items:flex-end; margin-top:12px; padding-top:12px; border-top:0.5px solid var(--color-border-tertiary);">
             <div>
               <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Vista previa del tile</p>
-              <div style="width:62px;height:62px;border-radius:var(--border-radius-md);background:#4FAC27;color:#173404;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <span style="font-size:19px;font-weight:500;line-height:1;">Ro</span>
-                <span style="font-size:9px;">Romero</span>
+              <div id="ing-tile-preview" style="width:62px;height:62px;border-radius:var(--border-radius-md);background:#888888;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <span class="ing-tile-preview__abbr" style="font-size:19px;font-weight:500;line-height:1;">—</span>
+                <span class="ing-tile-preview__name" style="font-size:9px;">Sin familia</span>
               </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button class="btn"><i class="ti ti-upload"></i> Imagen de fondo</button>
-              <button class="btn"><i class="ti ti-upload"></i> Imagen decorativa</button>
+              <div class="flex-row" style="gap:6px;">
+                <div class="img-thumb" id="ing-fondo-thumb" style="width:32px;height:32px;"><i class="ti ti-photo" style="font-size:13px;"></i></div>
+                <button class="btn" id="ing-fondo-btn" type="button"><i class="ti ti-upload"></i> Imagen de fondo</button>
+                <input type="file" id="ing-fondo-input" accept="image/*" style="display:none;">
+              </div>
+              <div class="flex-row" style="gap:6px;">
+                <div class="img-thumb" id="ing-decorativa-thumb" style="width:32px;height:32px;"><i class="ti ti-photo" style="font-size:13px;"></i></div>
+                <button class="btn" id="ing-decorativa-btn" type="button"><i class="ti ti-upload"></i> Imagen decorativa</button>
+                <input type="file" id="ing-decorativa-input" accept="image/*" style="display:none;">
+              </div>
+              <span id="ing-imagen-status" style="display:none;font-size:12px;"></span>
             </div>
-            <button class="btn btn-primary" style="margin-left:auto;">Guardar</button>
+            <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
+              <input type="checkbox" id="ing-activo" checked> Activo
+            </label>
+            <button class="btn" id="ing-cancel" type="button" style="display:none;">Cancelar edición</button>
+            <button class="btn btn-primary" id="ing-save" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <p class="admin-card__title">Ingredientes existentes <span id="ing-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></p>
+          <div class="admin-table-wrap">
+            <div style="display:grid;grid-template-columns:1fr 110px 70px 60px 64px;gap:8px;align-items:center;padding:10px 12px;background:var(--color-background-secondary);font-size:11px;color:var(--color-text-tertiary);" id="ing-table-head">
+              <span>Nombre</span><span>Familia</span><span>Abrev.</span><span>Activo</span><span></span>
+            </div>
+            <div id="ing-table-body"></div>
           </div>
         </div>
       </div>
@@ -289,59 +278,9 @@
             <span></span>
           </div>
 
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#4FAC27;"></span>
-              <input value="Hoja">
-              <input value="Ho">
-              <input value="1">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#EF9F27;"></span>
-              <input value="Fruta">
-              <input value="Fr">
-              <input value="2">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#00AFCC;"></span>
-              <input value="Alga">
-              <input value="Al">
-              <input value="3">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#C47A2B;"></span>
-              <input value="Semilla">
-              <input value="Se">
-              <input value="4">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#7D83A2;"></span>
-              <input value="Mineral">
-              <input value="Mi">
-              <input value="5">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#E07898;"></span>
-              <input value="Flor">
-              <input value="Fl">
-              <input value="6">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-            <div class="fam-ing-grid">
-              <span class="fam-color-swatch" style="background:#8B7355;"></span>
-              <input value="Grano">
-              <input value="Gr">
-              <input value="7">
-              <button class="btn" style="font-size:12px;padding:6px 8px;">Guardar</button>
-            </div>
-          </div>
+          <div id="fi-table-body" style="display:flex; flex-direction:column; gap:6px;"></div>
 
-          <button class="btn" style="font-size:13px; color:var(--color-text-info); margin-top:10px;">
+          <button class="btn" id="fi-add-btn" type="button" style="font-size:13px; color:var(--color-text-info); margin-top:10px;">
             <i class="ti ti-plus"></i> Añadir familia
           </button>
         </div>
@@ -359,45 +298,90 @@
       <div class="admin-card">
         <p class="admin-card__title">Contenido · Quienes Somos</p>
 
-        <!-- Hero block -->
+        <!-- Hero block (paginas_contenido, clave="quienes-somos") -->
         <div style="border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:12px; margin-bottom:12px;">
           <p class="section-label">Hero</p>
           <div style="display:flex; flex-direction:column; gap:8px;">
-            <input value="Nuestro Manifiesto" placeholder="Título (ES)">
-            <textarea placeholder="Declaración de marca (ES)" style="min-height:40px;">En una Tierra llena de Vida la salud es un estado natural y la belleza su consecuencia</textarea>
-            <button class="btn" style="align-self:flex-start;"><i class="ti ti-upload"></i> Imagen de fondo</button>
+            <input id="pc-titulo" placeholder="Título (ES)">
+            <textarea id="pc-cuerpo" placeholder="Declaración de marca (ES)" style="min-height:40px;"></textarea>
+            <div class="flex-row" style="gap:8px;">
+              <div class="img-thumb" id="pc-imagen-thumb" style="width:44px;height:44px;"><i class="ti ti-photo" style="font-size:16px;"></i></div>
+              <button class="btn" id="pc-imagen-btn" type="button" style="align-self:flex-start;"><i class="ti ti-upload"></i> Imagen de fondo</button>
+              <input type="file" id="pc-imagen-input" accept="image/*" style="display:none;">
+              <span id="pc-imagen-status" style="display:none;font-size:12px;"></span>
+              <button class="btn btn-primary" id="pc-save" type="button" style="margin-left:auto;">Guardar hero</button>
+            </div>
           </div>
         </div>
 
-        <!-- Narrative blocks -->
-        <p class="section-label">Bloques narrativos</p>
+        <!-- Narrative blocks (bloques_contenido, pagina="quienes-somos") -->
+        <p class="section-label" id="bc-form-title">Bloques narrativos · nuevo</p>
 
-        <div class="content-block-row">
-          <i class="ti ti-grip-vertical drag-handle" style="font-size:18px;"></i>
-          <div class="content-block-info">
-            <p class="content-block-name">Bloque 1</p>
-            <p class="content-block-sub">layout: imagen a la izquierda</p>
+        <div class="grid-2" style="margin-bottom:8px;">
+          <div>
+            <label>Título (opcional)</label>
+            <input type="text" id="bc-titulo" placeholder="Título del bloque">
           </div>
-          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:17px;"></i></button>
-          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:17px;"></i></button>
+          <div>
+            <label>Layout</label>
+            <select id="bc-layout">
+              <option value="img_izquierda">Imagen a la izquierda</option>
+              <option value="img_derecha">Imagen a la derecha</option>
+              <option value="fondo_completo">Fondo completo</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label>Texto</label>
+            <textarea id="bc-texto" style="min-height:50px;" placeholder="Texto del bloque narrativo..."></textarea>
+          </div>
+          <div>
+            <label>Orden</label>
+            <input type="number" id="bc-orden" value="0">
+          </div>
+        </div>
+        <div class="flex-row" style="gap:8px; margin-bottom:12px;">
+          <div class="img-thumb" id="bc-imagen-thumb" style="width:44px;height:44px;"><i class="ti ti-photo" style="font-size:16px;"></i></div>
+          <button class="btn" id="bc-imagen-btn" type="button"><i class="ti ti-upload"></i> Imagen</button>
+          <input type="file" id="bc-imagen-input" accept="image/*" style="display:none;">
+          <span id="bc-imagen-status" style="display:none;font-size:12px;"></span>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto;">
+            <input type="checkbox" id="bc-activo" checked> Activo
+          </label>
+          <button class="btn" id="bc-cancel" type="button" style="display:none;">Cancelar edición</button>
+          <button class="btn btn-primary" id="bc-save" type="button">Guardar bloque</button>
         </div>
 
-        <div class="content-block-row">
-          <i class="ti ti-grip-vertical drag-handle" style="font-size:18px;"></i>
-          <div class="content-block-info">
-            <p class="content-block-name">Bloque 2</p>
-            <p class="content-block-sub">layout: imagen a la derecha</p>
-          </div>
-          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:17px;"></i></button>
-          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:17px;"></i></button>
-        </div>
+        <div id="bc-table-body"></div>
 
         <div class="flex-row--between" style="margin-top:4px;">
-          <button class="btn" style="font-size:13px;color:var(--color-text-info);">
-            <i class="ti ti-plus"></i> Añadir bloque
-          </button>
-          <button class="btn btn-primary">Guardar contenido</button>
+          <span style="font-size:12px;color:var(--color-text-tertiary);" id="bc-count"></span>
         </div>
+      </div>
+
+      <!-- Promesas (filosofía del home) -->
+      <div class="admin-card">
+        <p class="admin-card__title" id="pr-form-title">Promesas del home · nueva</p>
+        <p style="font-size:12px; color:var(--color-text-tertiary); margin:0 0 12px;">Frases cortas que aparecen como filosofía de marca en el home.</p>
+
+        <div class="flex-row" style="gap:8px; margin-bottom:10px;">
+          <div class="img-thumb" id="pr-icono-thumb" style="width:40px;height:40px;"><i class="ti ti-photo" style="font-size:15px;"></i></div>
+          <button class="btn" id="pr-icono-btn" type="button" style="font-size:12px;"><i class="ti ti-upload"></i> Ícono (opcional)</button>
+          <input type="file" id="pr-icono-input" accept="image/*" style="display:none;">
+          <input type="text" id="pr-texto" placeholder="Texto de la promesa" style="flex:1;">
+          <input type="number" id="pr-orden" value="0" style="width:70px;" title="Orden">
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" id="pr-activo" checked> Activa
+          </label>
+        </div>
+        <span id="pr-icono-status" style="display:none;font-size:12px;"></span>
+
+        <div class="flex-row--between" style="margin-top:4px; margin-bottom:8px;">
+          <button class="btn" id="pr-cancel" type="button" style="display:none;">Cancelar edición</button>
+          <button class="btn btn-primary" id="pr-save" type="button" style="margin-left:auto;">Guardar promesa</button>
+        </div>
+
+        <div id="pr-table-body"></div>
+        <span style="font-size:12px;color:var(--color-text-tertiary);" id="pr-count"></span>
       </div>
 
     </div><!-- /tab-contenido -->
@@ -408,72 +392,62 @@
     ══════════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-banners" role="tabpanel">
 
+      <!-- Home carousel — form -->
       <div class="admin-card">
-        <p class="admin-card__title">Banners</p>
-
-        <!-- Home carousel -->
-        <p class="section-label">Carrusel del home</p>
-
-        <div class="banner-row">
-          <i class="ti ti-grip-vertical drag-handle" style="font-size:16px;"></i>
-          <div class="banner-thumb"><i class="ti ti-photo" style="font-size:14px;"></i></div>
-          <div class="banner-info">
-            <strong>Gel Aloe Vera</strong><br>
-            <span>→ /familias/aloe-vera · desktop + móvil</span>
+        <p class="admin-card__title" id="ban-form-title">Carrusel del home · nuevo slide</p>
+        <div class="grid-2">
+          <div>
+            <label>Título (ES)</label>
+            <input type="text" id="ban-titulo-es" placeholder="Gel Aloe Vera">
           </div>
-          <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:16px;"></i></button>
-          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:16px;"></i></button>
-        </div>
-
-        <div class="banner-row">
-          <i class="ti ti-grip-vertical drag-handle" style="font-size:16px;"></i>
-          <div class="banner-thumb"><i class="ti ti-photo" style="font-size:14px;"></i></div>
-          <div class="banner-info">
-            <strong>Concentrado Argán</strong><br>
-            <span>→ /productos/concentrado-argan · desktop + móvil</span>
+          <div>
+            <label>Título (EN)</label>
+            <input type="text" id="ban-titulo-en" placeholder="Aloe Vera Gel">
           </div>
-          <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:16px;"></i></button>
-          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:16px;"></i></button>
-        </div>
-
-        <div class="banner-row">
-          <i class="ti ti-grip-vertical drag-handle" style="font-size:16px;"></i>
-          <div class="banner-thumb"><i class="ti ti-photo" style="font-size:14px;"></i></div>
-          <div class="banner-info">
-            <strong>Cuidado Facial · Vitamin C</strong><br>
-            <span>→ /familias/vitamin-c · desktop + móvil</span>
+          <div class="col-span-2">
+            <label>Enlace (ruta del sitio al hacer clic)</label>
+            <input type="text" id="ban-enlace" placeholder="/familias/aloe-vera">
           </div>
-          <i class="ti ti-circle-check" style="font-size:17px; color:var(--color-text-success);"></i>
-          <button class="btn btn-ghost" title="Editar"><i class="ti ti-edit" style="font-size:16px;"></i></button>
-          <button class="btn btn-danger" title="Eliminar"><i class="ti ti-trash" style="font-size:16px;"></i></button>
-        </div>
-
-        <button class="btn" style="font-size:13px; color:var(--color-text-info); margin-top:8px;">
-          <i class="ti ti-plus"></i> Añadir slide
-        </button>
-
-        <!-- Category banners -->
-        <p class="section-label" style="margin-top:20px;">Banner de categoría mayor</p>
-        <div class="banner-cat-grid">
-          <div class="banner-cat-card">
-            <div class="banner-cat-thumb"><i class="ti ti-photo" style="font-size:18px;"></i></div>
-            <span class="banner-cat-name">Cuidado Capilar</span>
-            <button class="btn" style="font-size:12px;padding:5px 10px;width:100%;">Editar</button>
-          </div>
-          <div class="banner-cat-card">
-            <div class="banner-cat-thumb"><i class="ti ti-photo" style="font-size:18px;"></i></div>
-            <span class="banner-cat-name">Cuidado Facial</span>
-            <button class="btn" style="font-size:12px;padding:5px 10px;width:100%;">Editar</button>
-          </div>
-          <div class="banner-cat-card">
-            <div class="banner-cat-thumb"><i class="ti ti-photo" style="font-size:18px;"></i></div>
-            <span class="banner-cat-name">Cuidado Corporal</span>
-            <button class="btn" style="font-size:12px;padding:5px 10px;width:100%;">Editar</button>
+          <div>
+            <label>Orden</label>
+            <input type="number" id="ban-orden" value="0">
           </div>
         </div>
 
+        <div class="flex-row" style="margin-top:12px; gap:14px;">
+          <div>
+            <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Desktop · 1920×760</p>
+            <div class="img-thumb" id="ban-desktop-thumb" style="width:96px;height:56px;"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+            <button class="btn" id="ban-desktop-btn" type="button" style="margin-top:6px;font-size:12px;"><i class="ti ti-upload"></i> Subir</button>
+            <input type="file" id="ban-desktop-input" accept="image/*" style="display:none;">
+          </div>
+          <div>
+            <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Móvil · 768×900</p>
+            <div class="img-thumb" id="ban-mobile-thumb" style="width:56px;height:56px;"><i class="ti ti-photo" style="font-size:18px;"></i></div>
+            <button class="btn" id="ban-mobile-btn" type="button" style="margin-top:6px;font-size:12px;"><i class="ti ti-upload"></i> Subir</button>
+            <input type="file" id="ban-mobile-input" accept="image/*" style="display:none;">
+          </div>
+          <span id="ban-imagen-status" style="display:none;font-size:12px;align-self:center;"></span>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; align-self:center;">
+            <input type="checkbox" id="ban-activo" checked> Activo
+          </label>
+          <button class="btn" id="ban-cancel" type="button" style="display:none;align-self:center;">Cancelar edición</button>
+          <button class="btn btn-primary" id="ban-save" type="button" style="align-self:center;">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Home carousel — list -->
+      <div class="admin-card">
+        <p class="admin-card__title">Carrusel del home <span id="ban-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></p>
+        <div id="ban-table-body"></div>
+      </div>
+
+      <!-- Category banners -->
+      <div class="admin-card">
+        <p class="admin-card__title">Banner de categoría mayor</p>
+        <p style="font-size:12px; color:var(--color-text-tertiary); margin:0 0 12px;">Imagen de fondo (600×600) de cada categoría en el menú principal del sitio.</p>
+        <div class="banner-cat-grid" id="ban-cat-grid"></div>
+        <input type="file" id="ban-cat-input" accept="image/*" style="display:none;">
       </div>
 
     </div><!-- /tab-banners -->
@@ -496,7 +470,7 @@
               <p style="font-size:12px; color:var(--color-text-secondary); margin:4px 0 0;">ES siempre activo. Activa el switch EN en el sitio.</p>
             </div>
             <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
-              <input type="checkbox"> EN desactivado
+              <input type="checkbox" id="aj-en-activo"> <span id="aj-en-label">EN desactivado</span>
             </label>
           </div>
 
@@ -504,19 +478,19 @@
           <div class="grid-2">
             <div>
               <label>Email de contacto</label>
-              <input type="email" value="contacto@bio-land.com">
+              <input type="email" id="aj-email">
             </div>
             <div>
               <label>Facebook</label>
-              <input type="url" value="facebook.com/biolandoficial">
+              <input type="url" id="aj-facebook" placeholder="facebook.com/biolandoficial">
             </div>
             <div>
               <label>Instagram</label>
-              <input type="url" value="instagram.com/bioland">
+              <input type="url" id="aj-instagram" placeholder="instagram.com/bioland">
             </div>
             <div>
               <label>URL sitio USA (modal país)</label>
-              <input type="url" value="us.bio-land.com">
+              <input type="url" id="aj-url-usa" placeholder="us.bio-land.com">
             </div>
           </div>
 
@@ -530,22 +504,23 @@
                 <span style="font-size:11px;color:var(--color-text-tertiary);text-align:center;">Alto</span>
               </div>
               <span class="label">Carrusel desktop</span>
-              <input value="1920">
-              <input value="760">
+              <input type="number" id="aj-preset-carrusel-w" value="1920">
+              <input type="number" id="aj-preset-carrusel-h" value="760">
               <span class="label">Producto</span>
-              <input value="800">
-              <input value="800">
+              <input type="number" id="aj-preset-producto-w" value="800">
+              <input type="number" id="aj-preset-producto-h" value="800">
               <span class="label">Ingrediente fondo</span>
-              <input value="1920">
-              <input value="700">
+              <input type="number" id="aj-preset-ingfondo-w" value="1920">
+              <input type="number" id="aj-preset-ingfondo-h" value="700">
               <span class="label">Categoría mayor</span>
-              <input value="600">
-              <input value="600">
+              <input type="number" id="aj-preset-categoria-w" value="600">
+              <input type="number" id="aj-preset-categoria-h" value="600">
             </div>
           </div>
 
+          <span id="aj-status" style="display:none;font-size:12px;"></span>
           <div style="display:flex; justify-content:flex-end;">
-            <button class="btn btn-primary">Guardar ajustes</button>
+            <button class="btn btn-primary" id="aj-save" type="button">Guardar ajustes</button>
           </div>
 
         </div>
@@ -625,7 +600,7 @@
               <input type="text" id="mp-tipo" value="Gel Corporal">
             </div>
             <div>
-              <label>Categoría</label>
+              <label>Subcategoría <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· columna K del Excel (subcategoria_slug) · se muestra en el sitio como "Categoría"</span></label>
               <select id="mp-categoria">
                 <option value="capilar">Cuidado Capilar</option>
                 <option value="facial">Cuidado Facial</option>

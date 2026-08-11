@@ -196,6 +196,17 @@ export async function getCategorias() {
 }
 
 /**
+ * Actualiza una categoría existente (las 3 filas — capilar/facial/corporal —
+ * son fijas y se siembran desde supabase_schema.sql; el admin solo edita su
+ * imagen_url para el "banner de categoría mayor", nunca crea/borra filas).
+ */
+export async function upsertCategoria(categoria) {
+  if (USE_MOCK) { console.warn('[db] upsertCategoria en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _client('site')).from('categorias').upsert(categoria).select().single();
+  return { ok: !error, error, data };
+}
+
+/**
  * Adjunta el objeto {slug, nombre_es} de categoría a cada fila por slug
  * (NO por join de Supabase) — así funciona sin importar si el catálogo
  * vive en la misma DB que categorias o en la DB externa de ACS.
@@ -217,14 +228,21 @@ async function _attachCategoria(rows, slugField = 'categoria_slug') {
 
 // ── Familias de producto ─────────────────────────────────────
 
-export async function getFamilias({ categoria } = {}) {
+/**
+ * @param {object} [opts]
+ * @param {string}  [opts.categoria] slug de categoría ('capilar'|'facial'|'corporal')
+ * @param {boolean} [opts.activo]    default true — pasar undefined para ver también las inactivas (uso admin)
+ */
+export async function getFamilias({ categoria, activo = true } = {}) {
   if (USE_MOCK) {
-    let r = MOCK_FAMILIAS.filter(f => f.activo);
+    let r = [...MOCK_FAMILIAS];
+    if (activo !== undefined) r = r.filter(f => f.activo === activo);
     if (categoria) r = r.filter(f => f.categoria === categoria);
     return r.sort((a, b) => a.orden - b.orden);
   }
   const sb = await _catalogoClient();
-  let q = sb.from('familias').select('*').eq('activo', true).order('orden');
+  let q = sb.from('familias').select('*').order('orden');
+  if (activo !== undefined) q = q.eq('activo', activo);
   if (categoria) q = q.eq('categoria_slug', categoria);
   const { data, error } = await q;
   if (error) throw error;
@@ -232,28 +250,49 @@ export async function getFamilias({ categoria } = {}) {
 }
 
 export async function upsertFamilia(familia) {
-  if (USE_MOCK) { console.warn('[db] upsertFamilia en mock — no persiste'); return { ok: true }; }
-  const { error } = await (await _catalogoClient()).from('familias').upsert(familia);
+  if (USE_MOCK) { console.warn('[db] upsertFamilia en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _catalogoClient()).from('familias').upsert(familia).select().single();
+  return { ok: !error, error, data };
+}
+
+export async function deleteFamilia(id) {
+  if (USE_MOCK) { console.warn('[db] deleteFamilia en mock — no persiste'); return { ok: true }; }
+  const { error } = await (await _catalogoClient()).from('familias').delete().eq('id', id);
   return { ok: !error, error };
 }
 
 // ── Familias de ingrediente (tabla periódica) ─────────────────
 
-export async function getFamiliasIngrediente() {
+export async function getFamiliasIngrediente({ activo = true } = {}) {
   if (USE_MOCK) {
-    return MOCK_FAMILIAS_INGREDIENTE.filter(f => f.activo).sort((a, b) => a.orden - b.orden);
+    let r = [...MOCK_FAMILIAS_INGREDIENTE];
+    if (activo !== undefined) r = r.filter(f => f.activo === activo);
+    return r.sort((a, b) => a.orden - b.orden);
   }
-  const { data, error } = await (await _catalogoClient())
-    .from('familias_ingrediente').select('*').eq('activo', true).order('orden');
+  let q = (await _catalogoClient()).from('familias_ingrediente').select('*').order('orden');
+  if (activo !== undefined) q = q.eq('activo', activo);
+  const { data, error } = await q;
   if (error) throw error;
   return data;
 }
 
+export async function upsertFamiliaIngrediente(familiaIngrediente) {
+  if (USE_MOCK) { console.warn('[db] upsertFamiliaIngrediente en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _catalogoClient()).from('familias_ingrediente').upsert(familiaIngrediente).select().single();
+  return { ok: !error, error, data };
+}
+
 // ── Ingredientes ──────────────────────────────────────────────
 
-export async function getIngredientes({ familia } = {}) {
+/**
+ * @param {object} [opts]
+ * @param {string}  [opts.familia] slug de familias_ingrediente ('hoja'|'fruta'|...)
+ * @param {boolean} [opts.activo]  default true — pasar undefined para ver también los inactivos (uso admin)
+ */
+export async function getIngredientes({ familia, activo = true } = {}) {
   if (USE_MOCK) {
-    let r = MOCK_INGREDIENTES.filter(i => i.activo);
+    let r = [...MOCK_INGREDIENTES];
+    if (activo !== undefined) r = r.filter(i => i.activo === activo);
     if (familia) r = r.filter(i => i.familia === familia);
     return r.sort((a, b) => a.orden - b.orden).map(_normIngrediente);
   }
@@ -261,8 +300,9 @@ export async function getIngredientes({ familia } = {}) {
   // así que este join sí es seguro (no cruza de DB).
   let q = (await _catalogoClient())
     .from('ingredientes')
-    .select('*, familia:familias_ingrediente(slug, nombre_es, color, color_texto)')
-    .eq('activo', true).order('orden');
+    .select('*, familia:familias_ingrediente(id, slug, nombre_es, color, color_texto)')
+    .order('orden');
+  if (activo !== undefined) q = q.eq('activo', activo);
   if (familia) q = q.eq('familias_ingrediente.slug', familia);
   const { data, error } = await q;
   if (error) throw error;
@@ -275,8 +315,14 @@ export async function getIngredientes({ familia } = {}) {
 }
 
 export async function upsertIngrediente(ingrediente) {
-  if (USE_MOCK) { console.warn('[db] upsertIngrediente en mock — no persiste'); return { ok: true }; }
-  const { error } = await (await _catalogoClient()).from('ingredientes').upsert(ingrediente);
+  if (USE_MOCK) { console.warn('[db] upsertIngrediente en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _catalogoClient()).from('ingredientes').upsert(ingrediente).select().single();
+  return { ok: !error, error, data };
+}
+
+export async function deleteIngrediente(id) {
+  if (USE_MOCK) { console.warn('[db] deleteIngrediente en mock — no persiste'); return { ok: true }; }
+  const { error } = await (await _catalogoClient()).from('ingredientes').delete().eq('id', id);
   return { ok: !error, error };
 }
 
@@ -389,24 +435,120 @@ export async function deleteProducto(codigo) {
 
 // ── Banners ───────────────────────────────────────────────────
 
-export async function getBanners() {
+export async function getBanners({ activo = true } = {}) {
   if (USE_MOCK) {
-    return MOCK_BANNERS.filter(b => b.activo).sort((a, b) => a.orden - b.orden);
+    let r = [...MOCK_BANNERS];
+    if (activo !== undefined) r = r.filter(b => b.activo === activo);
+    return r.sort((a, b) => a.orden - b.orden);
   }
-  const { data, error } = await (await _client())
-    .from('banners').select('*').eq('activo', true).order('orden');
+  let q = (await _client()).from('banners').select('*').order('orden');
+  if (activo !== undefined) q = q.eq('activo', activo);
+  const { data, error } = await q;
   if (error) throw error;
   return data;
 }
 
 export async function upsertBanner(banner) {
-  if (USE_MOCK) { console.warn('[db] upsertBanner en mock — no persiste'); return { ok: true }; }
-  const { error } = await (await _client()).from('banners').upsert(banner);
-  return { ok: !error, error };
+  if (USE_MOCK) { console.warn('[db] upsertBanner en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _client()).from('banners').upsert(banner).select().single();
+  return { ok: !error, error, data };
 }
 
 export async function deleteBanner(id) {
   if (USE_MOCK) { console.warn('[db] deleteBanner en mock — no persiste'); return { ok: true }; }
   const { error } = await (await _client()).from('banners').delete().eq('id', id);
   return { ok: !error, error };
+}
+
+// ── Promesas (filosofía del home) ───────────────────────────────
+
+export async function getPromesas({ activo = true } = {}) {
+  if (USE_MOCK) return []; // el home sigue hardcodeado para promesas por ahora
+  let q = (await _client()).from('promesas').select('*').order('orden');
+  if (activo !== undefined) q = q.eq('activo', activo);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertPromesa(promesa) {
+  if (USE_MOCK) { console.warn('[db] upsertPromesa en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _client()).from('promesas').upsert(promesa).select().single();
+  return { ok: !error, error, data };
+}
+
+export async function deletePromesa(id) {
+  if (USE_MOCK) { console.warn('[db] deletePromesa en mock — no persiste'); return { ok: true }; }
+  const { error } = await (await _client()).from('promesas').delete().eq('id', id);
+  return { ok: !error, error };
+}
+
+// ── Páginas de contenido (bloques clave-valor de páginas simples) ─
+
+export async function getPaginasContenido() {
+  if (USE_MOCK) return [];
+  const { data, error } = await (await _client()).from('paginas_contenido').select('*').order('orden');
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertPaginaContenido(pagina) {
+  if (USE_MOCK) { console.warn('[db] upsertPaginaContenido en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _client()).from('paginas_contenido').upsert(pagina).select().single();
+  return { ok: !error, error, data };
+}
+
+export async function deletePaginaContenido(id) {
+  if (USE_MOCK) { console.warn('[db] deletePaginaContenido en mock — no persiste'); return { ok: true }; }
+  const { error } = await (await _client()).from('paginas_contenido').delete().eq('id', id);
+  return { ok: !error, error };
+}
+
+// ── Bloques de contenido narrativo (ej. Quienes Somos) ───────────
+
+export async function getBloquesContenido({ pagina, activo = true } = {}) {
+  if (USE_MOCK) return [];
+  let q = (await _client()).from('bloques_contenido').select('*').order('orden');
+  if (pagina) q = q.eq('pagina', pagina);
+  if (activo !== undefined) q = q.eq('activo', activo);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertBloqueContenido(bloque) {
+  if (USE_MOCK) { console.warn('[db] upsertBloqueContenido en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _client()).from('bloques_contenido').upsert(bloque).select().single();
+  return { ok: !error, error, data };
+}
+
+export async function deleteBloqueContenido(id) {
+  if (USE_MOCK) { console.warn('[db] deleteBloqueContenido en mock — no persiste'); return { ok: true }; }
+  const { error } = await (await _client()).from('bloques_contenido').delete().eq('id', id);
+  return { ok: !error, error };
+}
+
+// ── Config (singleton, id = 1) ───────────────────────────────────
+
+export async function getConfig() {
+  if (USE_MOCK) {
+    return {
+      id: 1,
+      idiomas_activos: { es: true, en: false },
+      email_contacto: 'contacto@bio-land.com',
+      redes: {},
+      region_modal_activo: true,
+      url_sitio_usa: '',
+      presets_imagen: {},
+    };
+  }
+  const { data, error } = await (await _client()).from('config').select('*').eq('id', 1).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertConfig(config) {
+  if (USE_MOCK) { console.warn('[db] upsertConfig en mock — no persiste'); return { ok: true, data: null }; }
+  const { data, error } = await (await _client()).from('config').upsert({ id: 1, ...config }).select().single();
+  return { ok: !error, error, data };
 }
