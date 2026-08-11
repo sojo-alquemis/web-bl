@@ -116,53 +116,16 @@
     ══════════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-familias" role="tabpanel">
 
-      <div class="admin-card">
-        <p class="admin-card__title" id="fam-form-title">Familia de producto · nueva</p>
-        <div class="grid-2">
-          <div>
-            <label>Categoría (agrupa)</label>
-            <select id="fam-categoria">
-              <option value="capilar">Cuidado Capilar</option>
-              <option value="facial">Cuidado Facial</option>
-              <option value="corporal">Cuidado Corporal</option>
-            </select>
-          </div>
-          <div>
-            <label>Nombre</label>
-            <input type="text" id="fam-nombre" placeholder="Infusión de Romero">
-          </div>
-          <div>
-            <label>Slug</label>
-            <input type="text" id="fam-slug" placeholder="infusion-de-romero">
-          </div>
-          <div>
-            <label>Orden</label>
-            <input type="number" id="fam-orden" value="0">
-          </div>
-          <div class="col-span-2">
-            <label>Descripción (opcional)</label>
-            <textarea id="fam-descripcion" placeholder="Descripción de la familia..." style="min-height:40px;"></textarea>
-          </div>
-        </div>
-
-        <div class="flex-row" style="margin-top:12px;">
-          <div class="img-thumb" id="fam-imagen-thumb" style="width:56px;height:56px;">
-            <i class="ti ti-photo" style="font-size:22px;"></i>
-          </div>
-          <button class="btn" id="fam-imagen-btn" type="button"><i class="ti ti-upload"></i> Imagen</button>
-          <input type="file" id="fam-imagen-input" accept="image/*" style="display:none;">
-          <span id="fam-imagen-status" style="display:none;font-size:12px;"></span>
-          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
-            <input type="checkbox" id="fam-activo" checked> Activa
-          </label>
-          <button class="btn" id="fam-cancel" type="button" style="display:none;">Cancelar edición</button>
-          <button class="btn btn-primary" id="fam-save" type="button">Guardar</button>
-        </div>
+      <!-- Toolbar -->
+      <div class="admin-toolbar">
+        <span style="font-size:13px;color:var(--color-text-secondary);flex:1;">Familias de producto <span id="fam-count"></span></span>
+        <button class="btn btn-primary" id="btn-new-familia" type="button">
+          <i class="ti ti-plus"></i> Nueva
+        </button>
       </div>
 
       <!-- Families list table -->
       <div class="admin-card">
-        <p class="admin-card__title">Familias existentes <span id="fam-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></p>
         <div class="admin-table-wrap">
           <div style="display:grid; grid-template-columns:1fr 130px 80px 60px 64px; gap:8px; align-items:center; padding:10px 12px; background:var(--color-background-secondary); font-size:11px; color:var(--color-text-tertiary);" id="fam-table-head">
             <span>Nombre</span><span>Categoría</span><span>Imagen</span><span>Activa</span><span></span>
@@ -187,74 +150,16 @@
 
       <!-- Sub-panel: Ingredientes -->
       <div class="subtab-panel active" id="ing-ingredientes">
-        <div class="admin-card">
-          <p class="admin-card__title" id="ing-form-title" style="color:var(--color-text-secondary); font-size:14px;">Ingrediente · nuevo</p>
-          <div class="grid-2">
-            <div>
-              <label>Familia</label>
-              <select id="ing-familia"></select>
-            </div>
-            <div>
-              <label>Color (heredado de la familia)</label>
-              <div class="flex-row" style="gap:8px;">
-                <input id="ing-color-input" value="#888888" disabled style="font-family:var(--font-mono); background:var(--color-background-secondary); color:var(--color-text-tertiary);">
-                <span id="ing-color-swatch" style="width:34px;height:34px;border-radius:var(--border-radius-md);background:#888888;border:0.5px solid var(--color-border-tertiary);flex-shrink:0;display:inline-block;"></span>
-                <i class="ti ti-lock" style="font-size:15px; color:var(--color-text-tertiary);"></i>
-              </div>
-            </div>
-            <div>
-              <label>Abreviatura</label>
-              <input type="text" id="ing-abreviatura" maxlength="3" placeholder="Ro">
-            </div>
-            <div>
-              <label>Nombre (ES)</label>
-              <input type="text" id="ing-nombre" placeholder="Romero">
-            </div>
-            <div>
-              <label>Slug</label>
-              <input type="text" id="ing-slug" placeholder="romero">
-            </div>
-            <div>
-              <label>Orden en la columna</label>
-              <input type="number" id="ing-orden" value="0">
-            </div>
-            <div class="col-span-2">
-              <label>Descripción (ES)</label>
-              <textarea id="ing-descripcion" style="min-height:42px;" placeholder="Breve descripción del ingrediente..."></textarea>
-            </div>
-          </div>
 
-          <div style="display:flex; gap:14px; align-items:flex-end; margin-top:12px; padding-top:12px; border-top:0.5px solid var(--color-border-tertiary);">
-            <div>
-              <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Vista previa del tile</p>
-              <div id="ing-tile-preview" style="width:62px;height:62px;border-radius:var(--border-radius-md);background:#888888;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <span class="ing-tile-preview__abbr" style="font-size:19px;font-weight:500;line-height:1;">—</span>
-                <span class="ing-tile-preview__name" style="font-size:9px;">Sin familia</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div class="flex-row" style="gap:6px;">
-                <div class="img-thumb" id="ing-fondo-thumb" style="width:32px;height:32px;"><i class="ti ti-photo" style="font-size:13px;"></i></div>
-                <button class="btn" id="ing-fondo-btn" type="button"><i class="ti ti-upload"></i> Imagen de fondo</button>
-                <input type="file" id="ing-fondo-input" accept="image/*" style="display:none;">
-              </div>
-              <div class="flex-row" style="gap:6px;">
-                <div class="img-thumb" id="ing-decorativa-thumb" style="width:32px;height:32px;"><i class="ti ti-photo" style="font-size:13px;"></i></div>
-                <button class="btn" id="ing-decorativa-btn" type="button"><i class="ti ti-upload"></i> Imagen decorativa</button>
-                <input type="file" id="ing-decorativa-input" accept="image/*" style="display:none;">
-              </div>
-              <span id="ing-imagen-status" style="display:none;font-size:12px;"></span>
-            </div>
-            <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
-              <input type="checkbox" id="ing-activo" checked> Activo
-            </label>
-            <button class="btn" id="ing-cancel" type="button" style="display:none;">Cancelar edición</button>
-            <button class="btn btn-primary" id="ing-save" type="button">Guardar</button>
-          </div>
+        <!-- Toolbar -->
+        <div class="admin-toolbar">
+          <span style="font-size:13px;color:var(--color-text-secondary);flex:1;">Ingredientes <span id="ing-count"></span></span>
+          <button class="btn btn-primary" id="btn-new-ingrediente" type="button">
+            <i class="ti ti-plus"></i> Nuevo
+          </button>
         </div>
 
         <div class="admin-card">
-          <p class="admin-card__title">Ingredientes existentes <span id="ing-count" style="font-weight:400;font-size:12px;color:var(--color-text-tertiary);"></span></p>
           <div class="admin-table-wrap">
             <div style="display:grid;grid-template-columns:1fr 110px 70px 60px 64px;gap:8px;align-items:center;padding:10px 12px;background:var(--color-background-secondary);font-size:11px;color:var(--color-text-tertiary);" id="ing-table-head">
               <span>Nombre</span><span>Familia</span><span>Abrev.</span><span>Activo</span><span></span>
@@ -734,6 +639,158 @@ Aceite mineral</textarea>
 
     </div>
   </div><!-- /modal-product -->
+
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL: Editar / Nueva Familia
+  ══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-familia" role="dialog" aria-modal="true" aria-labelledby="fam-form-title">
+    <div class="modal">
+
+      <div class="modal__header">
+        <span class="modal__title" id="fam-form-title">Familia de producto · nueva</span>
+        <button class="btn btn-ghost" id="modal-familia-close" style="padding:4px; border:none;" aria-label="Cerrar">
+          <i class="ti ti-x" style="font-size:18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <div class="grid-2">
+          <div>
+            <label>Categoría (agrupa)</label>
+            <select id="fam-categoria">
+              <option value="capilar">Cuidado Capilar</option>
+              <option value="facial">Cuidado Facial</option>
+              <option value="corporal">Cuidado Corporal</option>
+            </select>
+          </div>
+          <div>
+            <label>Nombre</label>
+            <input type="text" id="fam-nombre" placeholder="Infusión de Romero">
+          </div>
+          <div>
+            <label>Slug</label>
+            <input type="text" id="fam-slug" placeholder="infusion-de-romero">
+          </div>
+          <div>
+            <label>Orden</label>
+            <input type="number" id="fam-orden" value="0">
+          </div>
+          <div class="col-span-2">
+            <label>Descripción (opcional)</label>
+            <textarea id="fam-descripcion" placeholder="Descripción de la familia..." style="min-height:40px;"></textarea>
+          </div>
+        </div>
+
+        <div class="flex-row" style="margin-top:12px;">
+          <div class="img-thumb" id="fam-imagen-thumb" style="width:56px;height:56px;">
+            <i class="ti ti-photo" style="font-size:22px;"></i>
+          </div>
+          <button class="btn" id="fam-imagen-btn" type="button"><i class="ti ti-upload"></i> Imagen</button>
+          <input type="file" id="fam-imagen-input" accept="image/*" style="display:none;">
+          <span id="fam-imagen-status" style="display:none;font-size:12px;"></span>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
+            <input type="checkbox" id="fam-activo" checked> Activa
+          </label>
+        </div>
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn" id="fam-cancel" type="button">Cancelar</button>
+        <button class="btn btn-primary" id="fam-save" type="button">
+          <i class="ti ti-check"></i> Guardar familia
+        </button>
+      </div>
+
+    </div>
+  </div><!-- /modal-familia -->
+
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL: Editar / Nuevo Ingrediente
+  ══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-ingrediente" role="dialog" aria-modal="true" aria-labelledby="ing-form-title">
+    <div class="modal">
+
+      <div class="modal__header">
+        <span class="modal__title" id="ing-form-title">Ingrediente · nuevo</span>
+        <button class="btn btn-ghost" id="modal-ingrediente-close" style="padding:4px; border:none;" aria-label="Cerrar">
+          <i class="ti ti-x" style="font-size:18px;"></i>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <div class="grid-2">
+          <div>
+            <label>Familia</label>
+            <select id="ing-familia"></select>
+          </div>
+          <div>
+            <label>Color (heredado de la familia)</label>
+            <div class="flex-row" style="gap:8px;">
+              <input id="ing-color-input" value="#888888" disabled style="font-family:var(--font-mono); background:var(--color-background-secondary); color:var(--color-text-tertiary);">
+              <span id="ing-color-swatch" style="width:34px;height:34px;border-radius:var(--border-radius-md);background:#888888;border:0.5px solid var(--color-border-tertiary);flex-shrink:0;display:inline-block;"></span>
+              <i class="ti ti-lock" style="font-size:15px; color:var(--color-text-tertiary);"></i>
+            </div>
+          </div>
+          <div>
+            <label>Abreviatura</label>
+            <input type="text" id="ing-abreviatura" maxlength="3" placeholder="Ro">
+          </div>
+          <div>
+            <label>Nombre (ES)</label>
+            <input type="text" id="ing-nombre" placeholder="Romero">
+          </div>
+          <div>
+            <label>Slug</label>
+            <input type="text" id="ing-slug" placeholder="romero">
+          </div>
+          <div>
+            <label>Orden en la columna</label>
+            <input type="number" id="ing-orden" value="0">
+          </div>
+          <div class="col-span-2">
+            <label>Descripción (ES)</label>
+            <textarea id="ing-descripcion" style="min-height:42px;" placeholder="Breve descripción del ingrediente..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:14px; align-items:flex-end; margin-top:12px; padding-top:12px; border-top:0.5px solid var(--color-border-tertiary);">
+          <div>
+            <p style="font-size:11px; color:var(--color-text-tertiary); margin:0 0 4px;">Vista previa del tile</p>
+            <div id="ing-tile-preview" style="width:62px;height:62px;border-radius:var(--border-radius-md);background:#888888;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <span class="ing-tile-preview__abbr" style="font-size:19px;font-weight:500;line-height:1;">—</span>
+              <span class="ing-tile-preview__name" style="font-size:9px;">Sin familia</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div class="flex-row" style="gap:6px;">
+              <div class="img-thumb" id="ing-fondo-thumb" style="width:32px;height:32px;"><i class="ti ti-photo" style="font-size:13px;"></i></div>
+              <button class="btn" id="ing-fondo-btn" type="button"><i class="ti ti-upload"></i> Imagen de fondo</button>
+              <input type="file" id="ing-fondo-input" accept="image/*" style="display:none;">
+            </div>
+            <div class="flex-row" style="gap:6px;">
+              <div class="img-thumb" id="ing-decorativa-thumb" style="width:32px;height:32px;"><i class="ti ti-photo" style="font-size:13px;"></i></div>
+              <button class="btn" id="ing-decorativa-btn" type="button"><i class="ti ti-upload"></i> Imagen decorativa</button>
+              <input type="file" id="ing-decorativa-input" accept="image/*" style="display:none;">
+            </div>
+            <span id="ing-imagen-status" style="display:none;font-size:12px;"></span>
+          </div>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto; margin-bottom:0;">
+            <input type="checkbox" id="ing-activo" checked> Activo
+          </label>
+        </div>
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn" id="ing-cancel" type="button">Cancelar</button>
+        <button class="btn btn-primary" id="ing-save" type="button">
+          <i class="ti ti-check"></i> Guardar ingrediente
+        </button>
+      </div>
+
+    </div>
+  </div><!-- /modal-ingrediente -->
 
 
   <!-- Scripts -->

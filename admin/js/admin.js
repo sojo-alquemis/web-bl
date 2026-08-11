@@ -773,6 +773,8 @@ let _allFamiliasTab       = [];
 let _currentEditFamiliaId = null;
 let _pendingFamiliaImagenUrl = null; // URL resultante de la última imagen subida en este form
 
+const modalFamiliaOverlay = document.getElementById('modal-familia');
+
 function _buildFamiliaRow(f) {
   const catLabel = f.categoria?.nombre_es || f.categoria_slug || '—';
   const activeIcon = f.activo
@@ -808,7 +810,7 @@ function _renderFamiliasTable() {
   if (count) count.textContent = `(${_allFamiliasTab.length})`;
 
   wrap.querySelectorAll('[data-fam-edit]').forEach(btn => {
-    btn.addEventListener('click', () => _openFamiliaForm(btn.dataset.famEdit));
+    btn.addEventListener('click', () => openFamiliaModal(btn.dataset.famEdit));
   });
   wrap.querySelectorAll('[data-fam-delete]').forEach(btn => {
     btn.addEventListener('click', () => _deleteFamiliaTab(btn.dataset.famDelete));
@@ -827,6 +829,7 @@ async function _loadFamiliasTab() {
   }
 }
 
+/** Deja el formulario del modal en blanco, listo para crear una familia nueva. */
 function _clearFamiliaForm() {
   _currentEditFamiliaId = null;
   _pendingFamiliaImagenUrl = null;
@@ -841,34 +844,50 @@ function _clearFamiliaForm() {
   document.getElementById('fam-imagen-thumb').innerHTML = `<i class="ti ti-photo" style="font-size:22px;"></i>`;
   const statusEl = document.getElementById('fam-imagen-status');
   if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
-  const cancelBtn = document.getElementById('fam-cancel');
-  if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
-function _openFamiliaForm(id) {
-  const f = _allFamiliasTab.find(x => x.id === id);
-  if (!f) return;
-  _currentEditFamiliaId = f.id;
-  _pendingFamiliaImagenUrl = null;
+/** Abre el modal de Familia — vacío si id es null (nueva), o con los datos existentes si se pasa un id (editar). */
+function openFamiliaModal(id) {
+  if (id) {
+    const f = _allFamiliasTab.find(x => x.id === id);
+    if (!f) return;
+    _currentEditFamiliaId = f.id;
+    _pendingFamiliaImagenUrl = null;
 
-  const titleEl = document.getElementById('fam-form-title');
-  if (titleEl) titleEl.textContent = `Familia de producto · editando "${f.nombre_es}"`;
-  document.getElementById('fam-categoria').value   = f.categoria?.slug || f.categoria_slug || 'capilar';
-  document.getElementById('fam-nombre').value      = f.nombre_es || '';
-  document.getElementById('fam-slug').value        = f.slug || '';
-  document.getElementById('fam-orden').value       = f.orden ?? 0;
-  document.getElementById('fam-descripcion').value = f.descripcion_es || '';
-  document.getElementById('fam-activo').checked    = f.activo ?? true;
-  document.getElementById('fam-imagen-thumb').innerHTML = f.imagen_url
-    ? `<img src="${f.imagen_url}" alt="" style="width:100%;height:100%;object-fit:contain;">`
-    : `<i class="ti ti-photo" style="font-size:22px;"></i>`;
-  const statusEl = document.getElementById('fam-imagen-status');
-  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
-  const cancelBtn = document.getElementById('fam-cancel');
-  if (cancelBtn) cancelBtn.style.display = '';
-
-  document.getElementById('fam-categoria')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const titleEl = document.getElementById('fam-form-title');
+    if (titleEl) titleEl.textContent = `Familia de producto · editando "${f.nombre_es}"`;
+    document.getElementById('fam-categoria').value   = f.categoria?.slug || f.categoria_slug || 'capilar';
+    document.getElementById('fam-nombre').value      = f.nombre_es || '';
+    document.getElementById('fam-slug').value        = f.slug || '';
+    document.getElementById('fam-orden').value       = f.orden ?? 0;
+    document.getElementById('fam-descripcion').value = f.descripcion_es || '';
+    document.getElementById('fam-activo').checked    = f.activo ?? true;
+    document.getElementById('fam-imagen-thumb').innerHTML = f.imagen_url
+      ? `<img src="${f.imagen_url}" alt="" style="width:100%;height:100%;object-fit:contain;">`
+      : `<i class="ti ti-photo" style="font-size:22px;"></i>`;
+    const statusEl = document.getElementById('fam-imagen-status');
+    if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+  } else {
+    _clearFamiliaForm();
+  }
+  modalFamiliaOverlay?.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
+
+function closeFamiliaModal() {
+  modalFamiliaOverlay?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('btn-new-familia')?.addEventListener('click', () => openFamiliaModal(null));
+document.getElementById('modal-familia-close')?.addEventListener('click', closeFamiliaModal);
+document.getElementById('fam-cancel')?.addEventListener('click', closeFamiliaModal);
+modalFamiliaOverlay?.addEventListener('click', (e) => {
+  if (e.target === modalFamiliaOverlay) closeFamiliaModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modalFamiliaOverlay?.classList.contains('open')) closeFamiliaModal();
+});
 
 async function _deleteFamiliaTab(id) {
   const f = _allFamiliasTab.find(x => x.id === id);
@@ -882,15 +901,13 @@ async function _deleteFamiliaTab(id) {
     }
     _allFamiliasTab = _allFamiliasTab.filter(x => x.id !== id);
     _renderFamiliasTable();
-    if (_currentEditFamiliaId === id) _clearFamiliaForm();
+    if (_currentEditFamiliaId === id) closeFamiliaModal();
     await _loadCatalogoAuxiliar(); // refresca selects de familia (modal producto + filtro toolbar)
   } catch (err) {
     console.error('[admin] Error al eliminar familia:', err);
     alert(`Error al eliminar: ${err.message}`);
   }
 }
-
-document.getElementById('fam-cancel')?.addEventListener('click', _clearFamiliaForm);
 
 document.getElementById('fam-imagen-btn')?.addEventListener('click', () => {
   document.getElementById('fam-imagen-input')?.click();
@@ -982,7 +999,7 @@ document.getElementById('fam-save')?.addEventListener('click', async () => {
     if (idx >= 0) _allFamiliasTab[idx] = displayFamilia; else _allFamiliasTab.push(displayFamilia);
 
     _renderFamiliasTable();
-    _clearFamiliaForm();
+    closeFamiliaModal();
     await _loadCatalogoAuxiliar(); // refresca selects de familia (modal producto + filtro toolbar)
   } catch (err) {
     console.error('[admin] Error al guardar familia:', err);
@@ -1007,6 +1024,8 @@ let _allIngredientesTab      = [];
 let _currentEditIngredienteId = null;
 let _pendingIngFondoUrl       = null;
 let _pendingIngDecorativaUrl  = null;
+
+const modalIngredienteOverlay = document.getElementById('modal-ingrediente');
 
 /** Blanco o negro según el brillo del color de fondo (para texto legible). */
 function _autoTextColor(hex) {
@@ -1087,7 +1106,7 @@ function _renderIngredientesTable() {
   if (count) count.textContent = `(${_allIngredientesTab.length})`;
 
   wrap.querySelectorAll('[data-ing-edit]').forEach(btn => {
-    btn.addEventListener('click', () => _openIngredienteForm(btn.dataset.ingEdit));
+    btn.addEventListener('click', () => openIngredienteModal(btn.dataset.ingEdit));
   });
   wrap.querySelectorAll('[data-ing-delete]').forEach(btn => {
     btn.addEventListener('click', () => _deleteIngredienteTab(btn.dataset.ingDelete));
@@ -1110,6 +1129,7 @@ async function _loadIngredientesTab() {
   }
 }
 
+/** Deja el formulario del modal en blanco, listo para crear un ingrediente nuevo. */
 function _clearIngredienteForm() {
   _currentEditIngredienteId = null;
   _pendingIngFondoUrl = null;
@@ -1126,40 +1146,56 @@ function _clearIngredienteForm() {
   document.getElementById('ing-decorativa-thumb').innerHTML  = `<i class="ti ti-photo" style="font-size:13px;"></i>`;
   const statusEl = document.getElementById('ing-imagen-status');
   if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
-  const cancelBtn = document.getElementById('ing-cancel');
-  if (cancelBtn) cancelBtn.style.display = 'none';
   _renderIngFamiliaSelect();
 }
 
-function _openIngredienteForm(id) {
-  const i = _allIngredientesTab.find(x => x.id === id);
-  if (!i) return;
-  _currentEditIngredienteId = i.id;
-  _pendingIngFondoUrl = null;
-  _pendingIngDecorativaUrl = null;
+/** Abre el modal de Ingrediente — vacío si id es null (nuevo), o con los datos existentes si se pasa un id (editar). */
+function openIngredienteModal(id) {
+  if (id) {
+    const i = _allIngredientesTab.find(x => x.id === id);
+    if (!i) return;
+    _currentEditIngredienteId = i.id;
+    _pendingIngFondoUrl = null;
+    _pendingIngDecorativaUrl = null;
 
-  const titleEl = document.getElementById('ing-form-title');
-  if (titleEl) titleEl.textContent = `Ingrediente · editando "${i.nombre_es}"`;
-  document.getElementById('ing-abreviatura').value = i.abreviatura || '';
-  document.getElementById('ing-nombre').value      = i.nombre_es || '';
-  document.getElementById('ing-slug').value        = i.slug || '';
-  document.getElementById('ing-orden').value        = i.orden ?? 0;
-  document.getElementById('ing-descripcion').value = i.descripcion_es || '';
-  document.getElementById('ing-activo').checked    = i.activo ?? true;
-  document.getElementById('ing-fondo-thumb').innerHTML = i.imagen_fondo_url
-    ? `<img src="${i.imagen_fondo_url}" alt="" style="width:100%;height:100%;object-fit:cover;">`
-    : `<i class="ti ti-photo" style="font-size:13px;"></i>`;
-  document.getElementById('ing-decorativa-thumb').innerHTML = i.imagen_decorativa_url
-    ? `<img src="${i.imagen_decorativa_url}" alt="" style="width:100%;height:100%;object-fit:contain;">`
-    : `<i class="ti ti-photo" style="font-size:13px;"></i>`;
-  const statusEl = document.getElementById('ing-imagen-status');
-  if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
-  const cancelBtn = document.getElementById('ing-cancel');
-  if (cancelBtn) cancelBtn.style.display = '';
-
-  _renderIngFamiliaSelect(i.familia_ingrediente_id || i.familia?.id || '');
-  document.getElementById('ing-familia')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const titleEl = document.getElementById('ing-form-title');
+    if (titleEl) titleEl.textContent = `Ingrediente · editando "${i.nombre_es}"`;
+    document.getElementById('ing-abreviatura').value = i.abreviatura || '';
+    document.getElementById('ing-nombre').value      = i.nombre_es || '';
+    document.getElementById('ing-slug').value        = i.slug || '';
+    document.getElementById('ing-orden').value        = i.orden ?? 0;
+    document.getElementById('ing-descripcion').value = i.descripcion_es || '';
+    document.getElementById('ing-activo').checked    = i.activo ?? true;
+    document.getElementById('ing-fondo-thumb').innerHTML = i.imagen_fondo_url
+      ? `<img src="${i.imagen_fondo_url}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+      : `<i class="ti ti-photo" style="font-size:13px;"></i>`;
+    document.getElementById('ing-decorativa-thumb').innerHTML = i.imagen_decorativa_url
+      ? `<img src="${i.imagen_decorativa_url}" alt="" style="width:100%;height:100%;object-fit:contain;">`
+      : `<i class="ti ti-photo" style="font-size:13px;"></i>`;
+    const statusEl = document.getElementById('ing-imagen-status');
+    if (statusEl) { statusEl.style.display = 'none'; statusEl.textContent = ''; }
+    _renderIngFamiliaSelect(i.familia_ingrediente_id || i.familia?.id || '');
+  } else {
+    _clearIngredienteForm();
+  }
+  modalIngredienteOverlay?.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
+
+function closeIngredienteModal() {
+  modalIngredienteOverlay?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('btn-new-ingrediente')?.addEventListener('click', () => openIngredienteModal(null));
+document.getElementById('modal-ingrediente-close')?.addEventListener('click', closeIngredienteModal);
+document.getElementById('ing-cancel')?.addEventListener('click', closeIngredienteModal);
+modalIngredienteOverlay?.addEventListener('click', (e) => {
+  if (e.target === modalIngredienteOverlay) closeIngredienteModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modalIngredienteOverlay?.classList.contains('open')) closeIngredienteModal();
+});
 
 async function _deleteIngredienteTab(id) {
   const i = _allIngredientesTab.find(x => x.id === id);
@@ -1173,15 +1209,13 @@ async function _deleteIngredienteTab(id) {
     }
     _allIngredientesTab = _allIngredientesTab.filter(x => x.id !== id);
     _renderIngredientesTable();
-    if (_currentEditIngredienteId === id) _clearIngredienteForm();
+    if (_currentEditIngredienteId === id) closeIngredienteModal();
     await _loadCatalogoAuxiliar(); // refresca select de ingrediente principal en el modal de producto
   } catch (err) {
     console.error('[admin] Error al eliminar ingrediente:', err);
     alert(`Error al eliminar: ${err.message}`);
   }
 }
-
-document.getElementById('ing-cancel')?.addEventListener('click', _clearIngredienteForm);
 
 document.getElementById('ing-fondo-btn')?.addEventListener('click', () => document.getElementById('ing-fondo-input')?.click());
 document.getElementById('ing-decorativa-btn')?.addEventListener('click', () => document.getElementById('ing-decorativa-input')?.click());
@@ -1295,7 +1329,7 @@ document.getElementById('ing-save')?.addEventListener('click', async () => {
     if (idx >= 0) _allIngredientesTab[idx] = displayIngrediente; else _allIngredientesTab.push(displayIngrediente);
 
     _renderIngredientesTable();
-    _clearIngredienteForm();
+    closeIngredienteModal();
     await _loadCatalogoAuxiliar(); // refresca select de ingrediente principal en el modal de producto
   } catch (err) {
     console.error('[admin] Error al guardar ingrediente:', err);
