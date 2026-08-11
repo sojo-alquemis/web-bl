@@ -3,9 +3,9 @@
    ES Module — importa capa de datos desde db.js
    ============================================================ */
 
-import { getProductos, getFamilias, getIngredientes, upsertProducto, USE_MOCK } from '../assets/js/db.js';
-import { parseProductosWorkbook, buildProductosWorkbook } from '../assets/js/excel-catalogo.js';
-import { processImageToWebp, uploadProductoImagen, productImageCaption } from '../assets/js/image-upload.js';
+import { getProductos, getFamilias, getIngredientes, upsertProducto, USE_MOCK } from '../../assets/js/db.js';
+import { parseProductosWorkbook, buildProductosWorkbook } from '../../assets/js/excel-catalogo.js';
+import { processImageToWebp, uploadProductoImagen, productImageCaption } from '../../assets/js/image-upload.js';
 
 // ── Auth guard ──────────────────────────────────────────────
 const session = sessionStorage.getItem('bl_admin_session');
