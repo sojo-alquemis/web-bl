@@ -20,6 +20,7 @@ import { parseProductosWorkbook, buildProductosWorkbook } from '../../assets/js/
 import {
   processImageToWebp, processImageToWebpTransparent, processImageToWebpCover,
   uploadProductoImagen, productImageCaption, uploadAsset,
+  listProductoImagenesStorage,
   FAMILIA_IMAGE_PRESET, INGREDIENTE_FONDO_PRESET,
   CARRUSEL_DESKTOP_PRESET, CARRUSEL_MOBILE_PRESET, CATEGORIA_IMAGE_PRESET,
   CONTENIDO_BLOQUE_PRESET,
@@ -701,6 +702,24 @@ importInput?.addEventListener('change', async (e) => {
       return;
     }
 
+    // El Excel de ACS no trae imágenes — pero si ya se subió la foto del
+    // producto al bucket (ej. con others/tools/subir-imagenes-productos.html,
+    // que sube directo a Storage sin tocar la DB) esta la asocia sola por
+    // código, en vez de dejar el producto sin imagen hasta que alguien la
+    // vuelva a subir manualmente desde el editor.
+    let imagenesEncontradas = 0;
+    try {
+      const storageImages = await listProductoImagenesStorage();
+      for (const row of rows) {
+        if (storageImages.has(row.codigo)) {
+          row.fields.imagen_url = storageImages.get(row.codigo);
+          imagenesEncontradas++;
+        }
+      }
+    } catch (err) {
+      console.error('[admin] No se pudo listar productos/ en Storage (se sigue sin asociar imágenes):', err);
+    }
+
     const existentes = new Set(_allProductos.map(p => p.codigo));
     let creados = 0, actualizados = 0, omitidos = 0;
     const fallos = []; // errores reales al guardar (o filas omitidas) — lo más importante de revisar
@@ -751,6 +770,7 @@ importInput?.addEventListener('change', async (e) => {
       `<strong>${creados}</strong> creados · <strong>${actualizados}</strong> actualizados` +
       (omitidos ? ` · <strong>${omitidos}</strong> omitidos` : '') +
       (otrasMarcas.length ? ` · <strong>${otrasMarcas.length}</strong> de otra marca (omitidas)` : '') +
+      (imagenesEncontradas ? ` · <strong>${imagenesEncontradas}</strong> con imagen asociada desde Storage` : '') +
       (fallos.length ? `<br><br><strong style="color:var(--color-text-danger);">Errores al guardar (${fallos.length}):</strong><br>${listaTruncada(fallos)}` : '') +
       (avisos.length ? `<br><br><strong>Avisos de datos (${avisos.length})</strong> — campos ignorados por slug/valor no reconocido, no impiden que el resto de la fila se guarde:<br>${listaTruncada(avisos)}` : '') +
       modoNota,
@@ -762,6 +782,54 @@ importInput?.addEventListener('change', async (e) => {
   } catch (err) {
     console.error('[admin] Error al importar Excel:', err);
     _showImportResult(`Error al leer el archivo: ${err.message}`, 'error', { dismissible: true });
+  }
+});
+
+// ── Sincronizar imágenes ya subidas a Storage ────────────────
+// Para productos que ya se importaron ANTES de que el import empezara a
+// asociar imágenes solo (ver arriba) — o cuya foto se subió después por
+// others/tools/subir-imagenes-productos.html, que sube a Storage pero
+// nunca escribe en la DB. Este botón cierra esa brecha sin tener que
+// volver a importar el Excel completo.
+document.getElementById('btn-sync-imagenes')?.addEventListener('click', async () => {
+  const btn = document.getElementById('btn-sync-imagenes');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i> Buscando…`;
+
+  try {
+    const storageImages = await listProductoImagenesStorage();
+    if (!storageImages.size) {
+      alert('No se encontraron imágenes en productos/ dentro del bucket "media".');
+      return;
+    }
+
+    let asociadas = 0;
+    const fallidas = [];
+    for (const p of _allProductos) {
+      const url = storageImages.get(p.codigo);
+      if (!url || p.imagen_url === url) continue; // sin imagen en Storage, o ya está igual
+      if (!USE_MOCK) {
+        const { ok, error } = await upsertProducto({ codigo: p.codigo, imagen_url: url });
+        if (!ok) { fallidas.push(`${p.codigo}: ${error?.message || 'error desconocido'}`); continue; }
+      }
+      p.imagen_url = url;
+      asociadas++;
+    }
+
+    _renderTable();
+    alert(
+      asociadas
+        ? `${asociadas} producto(s) actualizados con la imagen que ya estaba en Storage.` +
+          (fallidas.length ? `\n\n${fallidas.length} fallaron:\n${fallidas.slice(0, 10).join('\n')}` : '')
+        : 'Todas las imágenes de Storage ya estaban asociadas — no había nada nuevo que sincronizar.'
+    );
+  } catch (err) {
+    console.error('[admin] Error al sincronizar imágenes desde Storage:', err);
+    alert(`Error al sincronizar: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
   }
 });
 

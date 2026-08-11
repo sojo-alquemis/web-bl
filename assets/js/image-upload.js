@@ -147,6 +147,41 @@ export async function processImageToWebpTransparent(file, quality = 0.9) {
 }
 
 /**
+ * Lista los archivos que ya existen en productos/ dentro del bucket "media"
+ * (subidos, por ejemplo, con others/tools/subir-imagenes-productos.html) y
+ * devuelve un Map código → URL pública. Sirve para "asociar" en la DB
+ * imágenes que ya están en Storage pero cuyo producto nunca se guardó con
+ * ese imagen_url (el importador de Excel no toca imágenes, y la
+ * herramienta de subida masiva tampoco escribe en la DB — son dos pasos
+ * independientes a propósito).
+ */
+export async function listProductoImagenesStorage() {
+  if (USE_MOCK) return new Map();
+  const sb = await getCatalogoClient();
+  const map = new Map();
+  const pageSize = 1000;
+  let offset = 0;
+  // Pagina por si algún día hay más de 1000 imágenes en la carpeta.
+  while (true) {
+    const { data, error } = await sb.storage.from('media').list('productos', {
+      limit: pageSize,
+      offset,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    if (error) throw error;
+    for (const file of data || []) {
+      if (!file.name.toLowerCase().endsWith('.webp')) continue;
+      const codigo = file.name.replace(/\.webp$/i, '');
+      const { data: pub } = sb.storage.from('media').getPublicUrl(`productos/${file.name}`);
+      map.set(codigo, pub.publicUrl);
+    }
+    if (!data || data.length < pageSize) break;
+    offset += pageSize;
+  }
+  return map;
+}
+
+/**
  * Sube el WebP ya procesado como "{codigo}.webp" a productos/ dentro del
  * bucket "media", sobrescribiendo si ya existía (upsert). Devuelve la URL
  * pública a guardar en productos.imagen_url.
