@@ -1,0 +1,76 @@
+/* ============================================================
+   TOKENS.CSS — Design System · Bio Land
+   Extraídos del original (junio 2026). No modificar directamente;
+   cambios de marca van aquí.
+   ============================================================ */
+
+:root {
+  /* ── Fondos ─────────────────────────────────────────────── */
+  --bg-base:        #FFFFFF;
+  --bg-soft:        #F6F8FF;
+  --bg-card:        #FFFFFF;
+  --bg-footer:      #000E55;
+  --bg-hover:       rgba(0, 22, 137, 0.06);
+  --border:         #E5E7EB;
+
+  /* ── Color de acento ────────────────────────────────────── */
+  --brand:          #001689;
+  --brand-dark:     #000E55;
+  --accent-cyan:    #00AFCC;
+  --accent-green:   #4FAC27;
+  --brand-soft:     #F6F8FF;
+  --success:        #4FAC27;
+  --error:          #D14343;
+
+  /* ── Texto ──────────────────────────────────────────────── */
+  --text-primary:   #001689;
+  --text-body:      #000000;
+  --text-secondary: #7D83A2;
+  --text-on-dark:   #FFFFFF;
+  --text-muted:     #9CA3AF;
+
+  /* ── Tipografía ─────────────────────────────────────────── */
+  --font-base:      'Montserrat', system-ui, sans-serif;
+  --font-mono:      ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fs-display:     clamp(36px, 5vw, 56px);
+  --fs-h1:          clamp(32px, 4vw, 44px);
+  --fs-h2:          40px;
+  --fs-h3:          clamp(24px, 3vw, 32px);
+  --fs-h4:          21px;
+  --fs-body:        16px;
+  --fs-subtitle:    18px;
+  --fs-label:       14px;
+  --fs-sm:          13px;
+
+  --fw-regular:     400;
+  --fw-medium:      500;
+  --fw-semibold:    600;
+  --fw-bold:        700;
+
+  /* ── Espaciado (base 8px) ───────────────────────────────── */
+  --space-xs:   8px;
+  --space-sm:   16px;
+  --space-md:   24px;
+  --space-lg:   32px;
+  --space-xl:   56px;
+  --space-2xl:  88px;
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  --container:      1536px;
+  --container-wide: 1536px;
+
+  /* ── Border radius ──────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  /* ── Sombras ────────────────────────────────────────────── */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.12);
+
+  /* ── Transiciones ───────────────────────────────────────── */
+  --transition: 200ms ease;
+}
