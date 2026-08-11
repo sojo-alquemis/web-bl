@@ -3,7 +3,7 @@
    ES Module — importa capa de datos desde db.js
    ============================================================ */
 
-import { getProductos, getFamilias, getIngredientes, upsertProducto, deleteProducto, USE_MOCK } from '../../assets/js/db.js';
+import { getProductos, getFamilias, getIngredientes, upsertProducto, deleteProducto, USE_MOCK, getSiteClient } from '../../assets/js/db.js';
 import { parseProductosWorkbook, buildProductosWorkbook } from '../../assets/js/excel-catalogo.js';
 import { processImageToWebp, uploadProductoImagen, productImageCaption } from '../../assets/js/image-upload.js';
 
@@ -12,6 +12,21 @@ const session = sessionStorage.getItem('bl_admin_session');
 if (!session) {
   window.location.replace('index.html');
   throw new Error('no session');
+}
+// La bandera de sessionStorage por sí sola no basta en modo real: puede
+// quedar puesta desde un login viejo en USE_MOCK=true (que nunca llamó a
+// Supabase Auth). Si no hay una sesión real, cualquier escritura a la DB
+// (guardar, borrar, importar Excel) va a fallar en silencio por RLS —
+// las políticas solo permiten escribir a usuarios "authenticated". Se
+// verifica acá y, si falta, se manda de vuelta al login.
+if (!USE_MOCK) {
+  const sb = await getSiteClient();
+  const { data: sessionCheck } = await sb.auth.getSession();
+  if (!sessionCheck?.session) {
+    sessionStorage.removeItem('bl_admin_session');
+    window.location.replace('index.html');
+    throw new Error('no hay sesión real de Supabase Auth — hay que volver a loguearse');
+  }
 }
 
 // ── Correo del usuario en el topbar ─────────────────────────
@@ -587,7 +602,7 @@ mpImagenInput?.addEventListener('change', async (e) => {
 // IMPORTAR / EXPORTAR EXCEL
 // ══════════════════════════════════════════════════════════
 
-function _showImportResult(html, tone = 'info') {
+function _showImportResult(html, tone = 'info', { dismissible = false } = {}) {
   const el = document.getElementById('import-result');
   if (!el) return;
   const colors = {
@@ -602,7 +617,27 @@ function _showImportResult(html, tone = 'info') {
   el.style.fontSize = '13px';
   el.style.background = colors.bg;
   el.style.color = colors.text;
-  el.innerHTML = html;
+  el.innerHTML = dismissible
+    ? `<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+         <div style="flex:1;">${html}</div>
+         <button id="import-result-close" title="Cerrar" style="background:none;border:none;cursor:pointer;color:inherit;font-size:16px;line-height:1;padding:0;flex-shrink:0;">✕</button>
+       </div>`
+    : html;
+  if (dismissible) {
+    document.getElementById('import-result-close')?.addEventListener('click', () => {
+      el.style.display = 'none';
+      el.innerHTML = '';
+    });
+  }
+}
+
+/** Progreso en vivo mientras se procesan las filas (importar puede tardar
+ * con archivos grandes — sin esto, la pantalla se veía "congelada"). */
+function _showImportProgress(done, total, extra = '') {
+  _showImportResult(
+    `<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i> Guardando… ${done} / ${total} filas procesadas.${extra}`,
+    'info'
+  );
 }
 
 // ── Exportar ────────────────────────────────────────────────
@@ -639,50 +674,69 @@ importInput?.addEventListener('change', async (e) => {
 
     const { rows, errors } = parseProductosWorkbook(workbook, familiaMap, ingredienteMap);
     if (!rows.length) {
-      _showImportResult(`No se encontraron filas de producto para importar.${errors.length ? '<br>' + errors.map(e => `Fila ${e.row ?? '—'}: ${e.message}`).join('<br>') : ''}`, 'error');
+      _showImportResult(`No se encontraron filas de producto para importar.${errors.length ? '<br>' + errors.map(e => `Fila ${e.row ?? '—'}: ${e.message}`).join('<br>') : ''}`, 'error', { dismissible: true });
       return;
     }
 
     const existentes = new Set(_allProductos.map(p => p.codigo));
     let creados = 0, actualizados = 0, omitidos = 0;
-    const fallos = [];
+    const fallos = []; // errores reales al guardar (o filas omitidas) — lo más importante de revisar
 
-    for (const row of rows) {
+    _showImportProgress(0, rows.length);
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
       const esNuevo = !existentes.has(row.codigo);
       if (esNuevo && (!row.fields.slug || !row.fields.nombre_es)) {
         omitidos++;
         fallos.push(`Fila ${row.rowNumber} (${row.codigo}): producto nuevo sin slug o nombre_es — se omite.`);
-        continue;
-      }
-      try {
-        if (USE_MOCK) {
-          // Modo desarrollo: vista previa, no se escribe en ninguna DB.
-          esNuevo ? creados++ : actualizados++;
-          continue;
+      } else {
+        try {
+          if (USE_MOCK) {
+            // Modo desarrollo: vista previa, no se escribe en ninguna DB.
+            esNuevo ? creados++ : actualizados++;
+          } else {
+            const { ok, error } = await upsertProducto({ codigo: row.codigo, ...row.fields });
+            if (!ok) {
+              fallos.push(`Fila ${row.rowNumber} (${row.codigo}): ${error?.message || 'error al guardar'}`);
+            } else {
+              esNuevo ? creados++ : actualizados++;
+            }
+          }
+        } catch (err) {
+          fallos.push(`Fila ${row.rowNumber} (${row.codigo}): ${err.message}`);
         }
-        const { ok, error } = await upsertProducto({ codigo: row.codigo, ...row.fields });
-        if (!ok) { fallos.push(`Fila ${row.rowNumber} (${row.codigo}): ${error?.message || 'error al guardar'}`); continue; }
-        esNuevo ? creados++ : actualizados++;
-      } catch (err) {
-        fallos.push(`Fila ${row.rowNumber} (${row.codigo}): ${err.message}`);
       }
+      // Actualiza el progreso cada 10 filas (o en la última) para no saturar el DOM.
+      if (i % 10 === 0 || i === rows.length - 1) _showImportProgress(i + 1, rows.length);
     }
 
-    const avisos = [...errors.map(e => `Fila ${e.row}${e.codigo ? ` (${e.codigo})` : ''}: ${e.message}`), ...fallos];
+    // "avisos" (parse-time: familia/ingrediente/subcategoría no encontrada, etc.)
+    // van SEPARADOS de "fallos" (errores reales al guardar o filas omitidas) —
+    // antes se mezclaban en una sola lista y los errores reales quedaban
+    // enterrados debajo de cientos de avisos de datos, sin poder verse.
+    const avisos = errors.map(e => `Fila ${e.row}${e.codigo ? ` (${e.codigo})` : ''}: ${e.message}`);
     const modoNota = USE_MOCK
-      ? '<br><em>Modo desarrollo (USE_MOCK): esto es una vista previa — nada se escribió en la base de datos todavía.</em>'
+      ? '<br><br><em>Modo desarrollo (USE_MOCK): esto es una vista previa — nada se escribió en la base de datos todavía.</em>'
       : '';
+
+    function listaTruncada(lista, max = 15) {
+      return lista.slice(0, max).join('<br>') + (lista.length > max ? `<br>…y ${lista.length - max} más.` : '');
+    }
+
     _showImportResult(
       `<strong>${creados}</strong> creados · <strong>${actualizados}</strong> actualizados` +
       (omitidos ? ` · <strong>${omitidos}</strong> omitidos` : '') +
-      (avisos.length ? `<br><br><strong>Avisos (${avisos.length}):</strong><br>${avisos.slice(0, 20).join('<br>')}${avisos.length > 20 ? `<br>…y ${avisos.length - 20} más.` : ''}` : '') +
+      (fallos.length ? `<br><br><strong style="color:var(--color-text-danger);">Errores al guardar (${fallos.length}):</strong><br>${listaTruncada(fallos)}` : '') +
+      (avisos.length ? `<br><br><strong>Avisos de datos (${avisos.length})</strong> — campos ignorados por slug/valor no reconocido, no impiden que el resto de la fila se guarde:<br>${listaTruncada(avisos)}` : '') +
       modoNota,
-      avisos.length ? 'error' : 'success'
+      fallos.length ? 'error' : (avisos.length ? 'info' : 'success'),
+      { dismissible: true }
     );
 
     if (!USE_MOCK) await _loadProductos();
   } catch (err) {
     console.error('[admin] Error al importar Excel:', err);
-    _showImportResult(`Error al leer el archivo: ${err.message}`, 'error');
+    _showImportResult(`Error al leer el archivo: ${err.message}`, 'error', { dismissible: true });
   }
 });
