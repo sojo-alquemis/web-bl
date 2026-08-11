@@ -63,6 +63,86 @@ document.getElementById('btn-logout')?.addEventListener('click', (e) => {
 });
 
 // ══════════════════════════════════════════════════════════
+// DIÁLOGOS PROPIOS — reemplazo de alert()/confirm() nativos.
+// El navegador bloquea/desestima los diálogos nativos en algunos
+// contextos (iframes, ciertos flujos de admin embebidos), lo que hacía
+// que errores reales de guardado pasaran desapercibidos. Este modal
+// propio siempre se ve y sigue el mismo estilo visual que el resto
+// del admin.
+// ══════════════════════════════════════════════════════════
+let _dialogEl = null;
+
+function _ensureDialogEl() {
+  if (_dialogEl) return _dialogEl;
+  const el = document.createElement('div');
+  el.className = 'app-dialog-overlay';
+  el.innerHTML = `
+    <div class="app-dialog" role="alertdialog" aria-modal="true">
+      <div class="app-dialog__icon"><i class="ti ti-alert-circle"></i></div>
+      <p class="app-dialog__message"></p>
+      <div class="app-dialog__actions">
+        <button type="button" class="app-dialog__cancel">Cancelar</button>
+        <button type="button" class="app-dialog__ok">Aceptar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  _dialogEl = el;
+  return el;
+}
+
+function _showDialog({ message, okText = 'Aceptar', cancelText = null, danger = false, icon = 'ti-alert-circle' }) {
+  return new Promise((resolve) => {
+    const el = _ensureDialogEl();
+    const iconEl   = el.querySelector('.app-dialog__icon');
+    const msgEl    = el.querySelector('.app-dialog__message');
+    const okBtn    = el.querySelector('.app-dialog__ok');
+    const cancelBtn = el.querySelector('.app-dialog__cancel');
+
+    msgEl.textContent = message;
+    iconEl.innerHTML = `<i class="ti ${icon}"></i>`;
+    iconEl.classList.toggle('tone-danger', !!danger);
+    okBtn.textContent = okText;
+    okBtn.classList.toggle('tone-danger', !!danger);
+    cancelBtn.style.display = cancelText ? '' : 'none';
+    if (cancelText) cancelBtn.textContent = cancelText;
+
+    const cleanup = (result) => {
+      el.classList.remove('open');
+      document.removeEventListener('keydown', onKey, true);
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      el.removeEventListener('mousedown', onOverlay);
+      resolve(result);
+    };
+    const onOk     = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    const onOverlay = (e) => { if (e.target === el && cancelText) cleanup(false); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); cleanup(false); }
+      if (e.key === 'Enter')  { e.stopPropagation(); cleanup(true); }
+    };
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    el.addEventListener('mousedown', onOverlay);
+    document.addEventListener('keydown', onKey, true);
+
+    el.classList.add('open');
+    okBtn.focus();
+  });
+}
+
+/** Reemplazo de window.alert(): muestra el mensaje y espera a que el usuario lo cierre. */
+function showAlert(message, { icon = 'ti-alert-circle', danger = false } = {}) {
+  return _showDialog({ message, okText: 'Aceptar', cancelText: null, icon, danger });
+}
+
+/** Reemplazo de window.confirm(): devuelve true/false según la elección del usuario. */
+function showConfirm(message, { okText = 'Eliminar', cancelText = 'Cancelar', danger = true, icon = 'ti-help-circle' } = {}) {
+  return _showDialog({ message, okText, cancelText, danger, icon });
+}
+
+// ══════════════════════════════════════════════════════════
 // TABS PRINCIPALES
 // ══════════════════════════════════════════════════════════
 
@@ -230,18 +310,18 @@ function _renderTable() {
 async function _deleteProducto(codigo) {
   const producto = _allProductos.find(p => p.codigo === codigo);
   const nombre = producto ? `${codigo} — ${producto.nombre_es}` : codigo;
-  if (!window.confirm(`¿Eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  if (!(await showConfirm(`¿Eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`))) return;
 
   try {
     if (!USE_MOCK) {
       const { ok, error } = await deleteProducto(codigo);
-      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
     }
     _allProductos = _allProductos.filter(p => p.codigo !== codigo);
     _renderTable();
   } catch (err) {
     console.error('[admin] Error al eliminar producto:', err);
-    alert(`Error al eliminar: ${err.message}`);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 
@@ -485,7 +565,7 @@ document.getElementById('modal-product-save')?.addEventListener('click', async (
 
   // Regla: no se puede crear (ni guardar) un producto sin código.
   if (!codigo) {
-    alert('Debes ingresar un código antes de guardar el producto.');
+    await showAlert('Debes ingresar un código antes de guardar el producto.');
     document.getElementById('mp-codigo')?.focus();
     return;
   }
@@ -493,7 +573,7 @@ document.getElementById('modal-product-save')?.addEventListener('click', async (
   // al editar, el campo código es readOnly y siempre es el mismo).
   const esNuevo = !_currentEditCodigo;
   if (esNuevo && _allProductos.some(p => p.codigo === codigo)) {
-    alert(`Ya existe un producto con el código "${codigo}".`);
+    await showAlert(`Ya existe un producto con el código "${codigo}".`);
     document.getElementById('mp-codigo')?.focus();
     return;
   }
@@ -531,7 +611,7 @@ document.getElementById('modal-product-save')?.addEventListener('click', async (
   try {
     if (!USE_MOCK) {
       const { ok, error } = await upsertProducto({ codigo, ...producto });
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
     }
 
     // Reconstruir la forma "con joins" para reflejarlo de inmediato en la
@@ -560,7 +640,7 @@ document.getElementById('modal-product-save')?.addEventListener('click', async (
     closeProductModal();
   } catch (err) {
     console.error('[admin] Error al guardar producto:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 
@@ -584,7 +664,7 @@ mpImagenInput?.addEventListener('change', async (e) => {
 
   const codigo = document.getElementById('mp-codigo')?.value.trim() || '';
   if (!codigo) {
-    alert('Ingresa el código del producto antes de subir la imagen (el archivo se nombra con ese código).');
+    await showAlert('Ingresa el código del producto antes de subir la imagen (el archivo se nombra con ese código).');
     return;
   }
 
@@ -660,9 +740,9 @@ function _showImportProgress(done, total, extra = '') {
 }
 
 // ── Exportar ────────────────────────────────────────────────
-document.getElementById('btn-export-excel')?.addEventListener('click', () => {
-  if (!window.XLSX) { alert('No se pudo cargar la librería de Excel. Revisa tu conexión e intenta de nuevo.'); return; }
-  if (!_allProductos.length) { alert('No hay productos cargados para exportar.'); return; }
+document.getElementById('btn-export-excel')?.addEventListener('click', async () => {
+  if (!window.XLSX) { await showAlert('No se pudo cargar la librería de Excel. Revisa tu conexión e intenta de nuevo.'); return; }
+  if (!_allProductos.length) { await showAlert('No hay productos cargados para exportar.'); return; }
   const wb = buildProductosWorkbook(_allProductos);
   const fecha = new Date().toISOString().slice(0, 10);
   window.XLSX.writeFile(wb, `Productos-BioLand-${fecha}.xlsx`);
@@ -676,7 +756,7 @@ importInput?.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   importInput.value = ''; // permite volver a elegir el mismo archivo después
   if (!file) return;
-  if (!window.XLSX) { alert('No se pudo cargar la librería de Excel. Revisa tu conexión e intenta de nuevo.'); return; }
+  if (!window.XLSX) { await showAlert('No se pudo cargar la librería de Excel. Revisa tu conexión e intenta de nuevo.'); return; }
 
   _showImportResult('<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i> Leyendo archivo…', 'info');
 
@@ -800,7 +880,7 @@ document.getElementById('btn-sync-imagenes')?.addEventListener('click', async ()
   try {
     const storageImages = await listProductoImagenesStorage();
     if (!storageImages.size) {
-      alert('No se encontraron imágenes en productos/ dentro del bucket "media".');
+      await showAlert('No se encontraron imágenes en productos/ dentro del bucket "media".');
       return;
     }
 
@@ -818,7 +898,7 @@ document.getElementById('btn-sync-imagenes')?.addEventListener('click', async ()
     }
 
     _renderTable();
-    alert(
+    await showAlert(
       asociadas
         ? `${asociadas} producto(s) actualizados con la imagen que ya estaba en Storage.` +
           (fallidas.length ? `\n\n${fallidas.length} fallaron:\n${fallidas.slice(0, 10).join('\n')}` : '')
@@ -826,7 +906,7 @@ document.getElementById('btn-sync-imagenes')?.addEventListener('click', async ()
     );
   } catch (err) {
     console.error('[admin] Error al sincronizar imágenes desde Storage:', err);
-    alert(`Error al sincronizar: ${err.message}`);
+    await showAlert(`Error al sincronizar: ${err.message}`);
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
@@ -960,12 +1040,12 @@ document.addEventListener('keydown', (e) => {
 async function _deleteFamiliaTab(id) {
   const f = _allFamiliasTab.find(x => x.id === id);
   const nombre = f?.nombre_es || id;
-  if (!window.confirm(`¿Eliminar la familia "${nombre}"? Los productos que la usan quedarán sin familia asignada.`)) return;
+  if (!(await showConfirm(`¿Eliminar la familia "${nombre}"? Los productos que la usan quedarán sin familia asignada.`))) return;
 
   try {
     if (!USE_MOCK) {
       const { ok, error } = await deleteFamilia(id);
-      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
     }
     _allFamiliasTab = _allFamiliasTab.filter(x => x.id !== id);
     _renderFamiliasTable();
@@ -973,7 +1053,7 @@ async function _deleteFamiliaTab(id) {
     await _loadCatalogoAuxiliar(); // refresca selects de familia (modal producto + filtro toolbar)
   } catch (err) {
     console.error('[admin] Error al eliminar familia:', err);
-    alert(`Error al eliminar: ${err.message}`);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 
@@ -988,7 +1068,7 @@ document.getElementById('fam-imagen-input')?.addEventListener('change', async (e
 
   const slug = document.getElementById('fam-slug')?.value.trim() || '';
   if (!slug) {
-    alert('Ingresa el slug de la familia antes de subir la imagen (el archivo se nombra con ese slug).');
+    await showAlert('Ingresa el slug de la familia antes de subir la imagen (el archivo se nombra con ese slug).');
     return;
   }
 
@@ -1022,13 +1102,13 @@ document.getElementById('fam-save')?.addEventListener('click', async () => {
   const nombre = document.getElementById('fam-nombre')?.value.trim() || '';
   const slug   = document.getElementById('fam-slug')?.value.trim() || '';
   if (!nombre || !slug) {
-    alert('Nombre y slug son obligatorios.');
+    await showAlert('Nombre y slug son obligatorios.');
     return;
   }
 
   const esNuevo = !_currentEditFamiliaId;
   if (esNuevo && _allFamiliasTab.some(f => f.slug === slug)) {
-    alert(`Ya existe una familia con el slug "${slug}".`);
+    await showAlert(`Ya existe una familia con el slug "${slug}".`);
     return;
   }
 
@@ -1050,7 +1130,7 @@ document.getElementById('fam-save')?.addEventListener('click', async () => {
     let savedId = _currentEditFamiliaId;
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertFamilia(familia);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       savedId = data?.id || savedId;
     } else {
       savedId = savedId || `mock-${Date.now()}`;
@@ -1071,7 +1151,7 @@ document.getElementById('fam-save')?.addEventListener('click', async () => {
     await _loadCatalogoAuxiliar(); // refresca selects de familia (modal producto + filtro toolbar)
   } catch (err) {
     console.error('[admin] Error al guardar familia:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 
@@ -1268,12 +1348,12 @@ document.addEventListener('keydown', (e) => {
 async function _deleteIngredienteTab(id) {
   const i = _allIngredientesTab.find(x => x.id === id);
   const nombre = i?.nombre_es || id;
-  if (!window.confirm(`¿Eliminar el ingrediente "${nombre}"? Los productos que lo usan como ingrediente principal quedarán sin ese dato.`)) return;
+  if (!(await showConfirm(`¿Eliminar el ingrediente "${nombre}"? Los productos que lo usan como ingrediente principal quedarán sin ese dato.`))) return;
 
   try {
     if (!USE_MOCK) {
       const { ok, error } = await deleteIngrediente(id);
-      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
     }
     _allIngredientesTab = _allIngredientesTab.filter(x => x.id !== id);
     _renderIngredientesTable();
@@ -1281,7 +1361,7 @@ async function _deleteIngredienteTab(id) {
     await _loadCatalogoAuxiliar(); // refresca select de ingrediente principal en el modal de producto
   } catch (err) {
     console.error('[admin] Error al eliminar ingrediente:', err);
-    alert(`Error al eliminar: ${err.message}`);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 
@@ -1301,7 +1381,7 @@ document.getElementById('ing-fondo-input')?.addEventListener('change', async (e)
   e.target.value = '';
   if (!file) return;
   const slug = document.getElementById('ing-slug')?.value.trim() || '';
-  if (!slug) { alert('Ingresa el slug del ingrediente antes de subir la imagen de fondo.'); return; }
+  if (!slug) { await showAlert('Ingresa el slug del ingrediente antes de subir la imagen de fondo.'); return; }
   try {
     _setIngImagenStatus('Procesando imagen de fondo…');
     const blob = await processImageToWebp(file, INGREDIENTE_FONDO_PRESET);
@@ -1322,7 +1402,7 @@ document.getElementById('ing-decorativa-input')?.addEventListener('change', asyn
   e.target.value = '';
   if (!file) return;
   const slug = document.getElementById('ing-slug')?.value.trim() || '';
-  if (!slug) { alert('Ingresa el slug del ingrediente antes de subir la imagen decorativa.'); return; }
+  if (!slug) { await showAlert('Ingresa el slug del ingrediente antes de subir la imagen decorativa.'); return; }
   try {
     _setIngImagenStatus('Procesando imagen decorativa…');
     // Sin fondo blanco ni recorte a preset fijo — es un gráfico superpuesto,
@@ -1346,17 +1426,17 @@ document.getElementById('ing-save')?.addEventListener('click', async () => {
   const abreviatura = document.getElementById('ing-abreviatura')?.value.trim() || '';
   const familiaId = document.getElementById('ing-familia')?.value || '';
   if (!nombre || !slug || !abreviatura) {
-    alert('Nombre, slug y abreviatura son obligatorios.');
+    await showAlert('Nombre, slug y abreviatura son obligatorios.');
     return;
   }
   if (!familiaId) {
-    alert('Elige una familia de ingrediente — el color se hereda de ahí.');
+    await showAlert('Elige una familia de ingrediente — el color se hereda de ahí.');
     return;
   }
 
   const esNuevo = !_currentEditIngredienteId;
   if (esNuevo && _allIngredientesTab.some(i => i.slug === slug)) {
-    alert(`Ya existe un ingrediente con el slug "${slug}".`);
+    await showAlert(`Ya existe un ingrediente con el slug "${slug}".`);
     return;
   }
 
@@ -1378,7 +1458,7 @@ document.getElementById('ing-save')?.addEventListener('click', async () => {
     let savedId = _currentEditIngredienteId;
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertIngrediente(ingrediente);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       savedId = data?.id || savedId;
     } else {
       savedId = savedId || `mock-${Date.now()}`;
@@ -1401,7 +1481,7 @@ document.getElementById('ing-save')?.addEventListener('click', async () => {
     await _loadCatalogoAuxiliar(); // refresca select de ingrediente principal en el modal de producto
   } catch (err) {
     console.error('[admin] Error al guardar ingrediente:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 
@@ -1450,7 +1530,7 @@ async function _saveFiRow(rowEl) {
   const orden  = Number(rowEl.querySelector('[data-fi-orden]')?.value) || 0;
   const color  = rowEl.querySelector('[data-fi-color]')?.value || '#888888';
 
-  if (!nombre || !abrev) { alert('Nombre y abreviatura son obligatorios.'); return; }
+  if (!nombre || !abrev) { await showAlert('Nombre y abreviatura son obligatorios.'); return; }
 
   // Idx dentro de la lista combinada [existentes...drafts] con la que se
   // pintó esta fila — si cae después de las existentes, es un draft nuevo.
@@ -1477,7 +1557,7 @@ async function _saveFiRow(rowEl) {
     let savedId = id;
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertFamiliaIngrediente(familiaIngrediente);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       savedId = data?.id || savedId;
     } else {
       savedId = savedId || `mock-${Date.now()}`;
@@ -1492,7 +1572,7 @@ async function _saveFiRow(rowEl) {
     _renderIngFamiliaSelect(document.getElementById('ing-familia')?.value);
   } catch (err) {
     console.error('[admin] Error al guardar familia de ingrediente:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 }
 
@@ -1610,19 +1690,19 @@ function _openBannerForm(id) {
 async function _deleteBannerTab(id) {
   const b = _allBanners.find(x => x.id === id);
   const nombre = b?.titulo_es || id;
-  if (!window.confirm(`¿Eliminar el slide "${nombre}" del carrusel del home?`)) return;
+  if (!(await showConfirm(`¿Eliminar el slide "${nombre}" del carrusel del home?`))) return;
 
   try {
     if (!USE_MOCK) {
       const { ok, error } = await deleteBanner(id);
-      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
     }
     _allBanners = _allBanners.filter(x => x.id !== id);
     _renderBannersTable();
     if (_currentEditBannerId === id) _clearBannerForm();
   } catch (err) {
     console.error('[admin] Error al eliminar banner:', err);
-    alert(`Error al eliminar: ${err.message}`);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 
@@ -1700,7 +1780,7 @@ document.getElementById('ban-mobile-input')?.addEventListener('change', async (e
 
 document.getElementById('ban-save')?.addEventListener('click', async () => {
   const tituloEs = document.getElementById('ban-titulo-es')?.value.trim() || '';
-  if (!tituloEs) { alert('El título (ES) es obligatorio — identifica el slide en esta lista.'); return; }
+  if (!tituloEs) { await showAlert('El título (ES) es obligatorio — identifica el slide en esta lista.'); return; }
 
   const existente = _currentEditBannerId ? _allBanners.find(b => b.id === _currentEditBannerId) : null;
   const banner = {
@@ -1718,7 +1798,7 @@ document.getElementById('ban-save')?.addEventListener('click', async () => {
     let savedId = _currentEditBannerId;
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertBanner(banner);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       savedId = data?.id || savedId;
     } else {
       savedId = savedId || `mock-${Date.now()}`;
@@ -1731,7 +1811,7 @@ document.getElementById('ban-save')?.addEventListener('click', async () => {
     _clearBannerForm();
   } catch (err) {
     console.error('[admin] Error al guardar banner:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 
@@ -1776,12 +1856,12 @@ document.getElementById('ban-cat-input')?.addEventListener('change', async (e) =
   try {
     const blob = await processImageToWebpCover(file, CATEGORIA_IMAGE_PRESET);
     const { ok, url, error } = await uploadAsset('categorias', `${slug}.webp`, blob, { target: 'site' });
-    if (!ok) { alert(`Error al subir: ${error?.message || 'desconocido'}`); return; }
+    if (!ok) { await showAlert(`Error al subir: ${error?.message || 'desconocido'}`); return; }
 
     if (!USE_MOCK) {
       const cat = _categoriasCache.find(c => c.slug === slug);
       const { ok: okSave, error: errSave } = await upsertCategoria({ id: cat?.id, slug, imagen_url: url });
-      if (!okSave) { alert(`Error al guardar: ${errSave?.message || 'desconocido'}`); return; }
+      if (!okSave) { await showAlert(`Error al guardar: ${errSave?.message || 'desconocido'}`); return; }
     }
 
     const idx = _categoriasCache.findIndex(c => c.slug === slug);
@@ -1789,7 +1869,7 @@ document.getElementById('ban-cat-input')?.addEventListener('change', async (e) =
     _renderCategoriaCards();
   } catch (err) {
     console.error('[admin] Error procesando/subiendo imagen de categoría:', err);
-    alert(`Error: ${err.message}`);
+    await showAlert(`Error: ${err.message}`);
   }
 });
 
@@ -1866,16 +1946,16 @@ document.getElementById('pc-save')?.addEventListener('click', async () => {
   try {
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertPaginaContenido(pagina);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       _heroContenido = data || { ...pagina };
     } else {
       _heroContenido = { ...pagina, id: _heroContenido?.id || `mock-${Date.now()}` };
     }
     _pendingHeroImagenUrl = null;
-    alert('Hero guardado.');
+    await showAlert('Hero guardado.');
   } catch (err) {
     console.error('[admin] Error al guardar hero de contenido:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 
@@ -1964,18 +2044,18 @@ function _openBloqueForm(id) {
 
 async function _deleteBloqueTab(id) {
   const b = _allBloques.find(x => x.id === id);
-  if (!window.confirm(`¿Eliminar el bloque "${b?.titulo_es || id}"?`)) return;
+  if (!(await showConfirm(`¿Eliminar el bloque "${b?.titulo_es || id}"?`))) return;
   try {
     if (!USE_MOCK) {
       const { ok, error } = await deleteBloqueContenido(id);
-      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
     }
     _allBloques = _allBloques.filter(x => x.id !== id);
     _renderBloquesTable();
     if (_currentEditBloqueId === id) _clearBloqueForm();
   } catch (err) {
     console.error('[admin] Error al eliminar bloque:', err);
-    alert(`Error al eliminar: ${err.message}`);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 
@@ -2010,7 +2090,7 @@ document.getElementById('bc-imagen-input')?.addEventListener('change', async (e)
 
 document.getElementById('bc-save')?.addEventListener('click', async () => {
   const texto = document.getElementById('bc-texto')?.value.trim() || '';
-  if (!texto) { alert('El texto del bloque es obligatorio.'); return; }
+  if (!texto) { await showAlert('El texto del bloque es obligatorio.'); return; }
 
   const existente = _currentEditBloqueId ? _allBloques.find(b => b.id === _currentEditBloqueId) : null;
   const bloque = {
@@ -2029,7 +2109,7 @@ document.getElementById('bc-save')?.addEventListener('click', async () => {
     let savedId = _currentEditBloqueId;
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertBloqueContenido(bloque);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       savedId = data?.id || savedId;
     } else {
       savedId = savedId || `mock-${Date.now()}`;
@@ -2041,7 +2121,7 @@ document.getElementById('bc-save')?.addEventListener('click', async () => {
     _clearBloqueForm();
   } catch (err) {
     console.error('[admin] Error al guardar bloque:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 
@@ -2125,18 +2205,18 @@ function _openPromesaForm(id) {
 
 async function _deletePromesaTab(id) {
   const p = _allPromesas.find(x => x.id === id);
-  if (!window.confirm(`¿Eliminar la promesa "${p?.texto_es || id}"?`)) return;
+  if (!(await showConfirm(`¿Eliminar la promesa "${p?.texto_es || id}"?`))) return;
   try {
     if (!USE_MOCK) {
       const { ok, error } = await deletePromesa(id);
-      if (!ok) { alert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
     }
     _allPromesas = _allPromesas.filter(x => x.id !== id);
     _renderPromesasTable();
     if (_currentEditPromesaId === id) _clearPromesaForm();
   } catch (err) {
     console.error('[admin] Error al eliminar promesa:', err);
-    alert(`Error al eliminar: ${err.message}`);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 
@@ -2172,7 +2252,7 @@ document.getElementById('pr-icono-input')?.addEventListener('change', async (e) 
 
 document.getElementById('pr-save')?.addEventListener('click', async () => {
   const texto = document.getElementById('pr-texto')?.value.trim() || '';
-  if (!texto) { alert('El texto de la promesa es obligatorio.'); return; }
+  if (!texto) { await showAlert('El texto de la promesa es obligatorio.'); return; }
 
   const existente = _currentEditPromesaId ? _allPromesas.find(p => p.id === _currentEditPromesaId) : null;
   const promesa = {
@@ -2187,7 +2267,7 @@ document.getElementById('pr-save')?.addEventListener('click', async () => {
     let savedId = _currentEditPromesaId;
     if (!USE_MOCK) {
       const { ok, error, data } = await upsertPromesa(promesa);
-      if (!ok) { alert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+      if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
       savedId = data?.id || savedId;
     } else {
       savedId = savedId || `mock-${Date.now()}`;
@@ -2199,7 +2279,7 @@ document.getElementById('pr-save')?.addEventListener('click', async () => {
     _clearPromesaForm();
   } catch (err) {
     console.error('[admin] Error al guardar promesa:', err);
-    alert(`Error al guardar: ${err.message}`);
+    await showAlert(`Error al guardar: ${err.message}`);
   }
 });
 

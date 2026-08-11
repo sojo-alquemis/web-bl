@@ -200,9 +200,20 @@ export async function getCategorias() {
  * son fijas y se siembran desde supabase_schema.sql; el admin solo edita su
  * imagen_url para el "banner de categoría mayor", nunca crea/borra filas).
  */
+/**
+ * UPDATE, no upsert (ver el mismo razonamiento en upsertProducto más abajo):
+ * las 3 filas de categorias son fijas y siempre existen (las siembra
+ * supabase_schema.sql), el admin nunca crea una nueva — así que no hace
+ * falta la rama de INSERT, y evitamos que un guardado parcial (ej. solo
+ * `imagen_url` desde "Banner de categoría mayor") falle por el NOT NULL de
+ * `nombre_es`, que .upsert() exige aunque el conflicto resuelva en UPDATE.
+ */
 export async function upsertCategoria(categoria) {
   if (USE_MOCK) { console.warn('[db] upsertCategoria en mock — no persiste'); return { ok: true, data: null }; }
-  const { data, error } = await (await _client('site')).from('categorias').upsert(categoria).select().single();
+  const { id, slug, ...patch } = categoria;
+  const sb = await _client('site');
+  const query = sb.from('categorias').update(patch);
+  const { data, error } = await (id ? query.eq('id', id) : query.eq('slug', slug)).select().single();
   return { ok: !error, error, data };
 }
 
@@ -421,10 +432,35 @@ export async function getProducto(slug) {
   return normalizado;
 }
 
+/**
+ * OJO: esto NO usa .upsert() a propósito. "productos" tiene columnas NOT
+ * NULL sin default (slug, nombre_es) — Postgres exige que la fila candidata
+ * a INSERT las tenga incluso cuando el conflicto termina resolviéndose como
+ * UPDATE, así que un guardado parcial de un producto YA EXISTENTE (ej. solo
+ * `imagen_url`, como hace "Sincronizar imágenes" o un Excel que deja
+ * slug/nombre_es vacíos porque no cambiaron — la convención de la app es
+ * que celda vacía = no tocar ese campo) fallaba siempre con
+ * "null value in column slug violates not-null constraint", aunque el
+ * producto ya existiera y esas columnas ya tuvieran valor en la fila real.
+ * Por eso: UPDATE primero (si no afecta ninguna fila, el producto no
+ * existía) y solo ahí sí INSERT completo — quien llama (el modal del admin,
+ * el importador de Excel) ya garantiza que un producto nuevo trae
+ * codigo/slug/nombre_es completos antes de llegar hasta acá.
+ */
 export async function upsertProducto(producto) {
   if (USE_MOCK) { console.warn('[db] upsertProducto en mock — no persiste'); return { ok: true }; }
-  const { error } = await (await _catalogoClient()).from('productos').upsert(producto);
-  return { ok: !error, error };
+  const { codigo, ...patch } = producto;
+  const sb = await _catalogoClient();
+
+  const { data: updated, error: updateError } = await sb
+    .from('productos').update(patch).eq('codigo', codigo).select();
+  if (updateError) return { ok: false, error: updateError };
+  if (updated && updated.length) return { ok: true, data: updated[0] };
+
+  const { data: created, error: insertError } = await sb
+    .from('productos').insert({ codigo, ...patch }).select().single();
+  if (insertError) return { ok: false, error: insertError };
+  return { ok: true, data: created };
 }
 
 export async function deleteProducto(codigo) {
