@@ -18,9 +18,9 @@
       <span class="admin-topbar__logo-label">Admin</span>
     </a>
     <div class="admin-topbar__right">
-      <span class="admin-topbar__user">
+      <span class="admin-topbar__user" id="topbar-user-email">
         <i class="ti ti-user-circle" style="font-size:18px;"></i>
-        admin@bio-land.com
+        erick.sojo@alquemis.com
       </span>
       <a href="index.html" class="admin-topbar__logout" id="btn-logout">
         <i class="ti ti-logout-2"></i> Salir
@@ -71,16 +71,20 @@
           <option value="1">Activos</option>
           <option value="0">Inactivos</option>
         </select>
-        <button class="btn" title="Exportar a Excel">
+        <button class="btn" id="btn-export-excel" title="Exportar a Excel">
           <i class="ti ti-file-download"></i> Exportar
         </button>
-        <button class="btn" title="Importar desde Excel">
+        <button class="btn" id="btn-import-excel" title="Importar desde Excel">
           <i class="ti ti-file-spreadsheet"></i> Importar
         </button>
+        <input type="file" id="import-excel-input" accept=".xlsx" style="display:none;">
         <button class="btn btn-primary" id="btn-new-product">
           <i class="ti ti-plus"></i> Nuevo
         </button>
       </div>
+
+      <!-- Resultado de la última importación -->
+      <div id="import-result" style="display:none;"></div>
 
       <!-- Table — renderizada por admin.js desde db.js -->
       <div class="admin-table-wrap" id="prod-table-body">
@@ -577,12 +581,26 @@
           <p class="form-section__title">Identificación</p>
           <div class="grid-2">
             <div>
-              <label>Código (PK)</label>
+              <label>Código (PK) · PP0/PT0</label>
               <input type="text" id="mp-codigo" value="PP088936" style="font-family:var(--font-mono);">
+            </div>
+            <div>
+              <label>Marca</label>
+              <select id="mp-marca">
+                <option value="bioland" selected>BioLand</option>
+              </select>
             </div>
             <div>
               <label>EAN13 / UPC</label>
               <input type="text" id="mp-ean" value="7591234567890">
+            </div>
+            <div>
+              <label>DUN14</label>
+              <input type="text" id="mp-dun14" placeholder="17451110880080" style="font-family:var(--font-mono);">
+            </div>
+            <div>
+              <label>Nombre interno <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· uso interno</span></label>
+              <input type="text" id="mp-nombre-interno" placeholder="BFA 30ML SERUM FACIAL...">
             </div>
             <div class="col-span-2">
               <label>Slug (URL) · autogenerado, editable</label>
@@ -607,10 +625,6 @@
               <input type="text" id="mp-tipo" value="Gel Corporal">
             </div>
             <div>
-              <label>Tamaño (ml)</label>
-              <input type="number" id="mp-ml" value="300">
-            </div>
-            <div>
               <label>Categoría</label>
               <select id="mp-categoria">
                 <option value="capilar">Cuidado Capilar</option>
@@ -618,8 +632,21 @@
                 <option value="corporal">Cuidado Corporal</option>
               </select>
             </div>
+          </div>
+          <div class="grid-3" style="margin-top:10px;">
             <div>
-              <label>Familia (cascada con categoría)</label>
+              <label>Tamaño</label>
+              <input type="number" id="mp-ml" value="300">
+            </div>
+            <div>
+              <label>Unidad</label>
+              <select id="mp-unidad">
+                <option value="ml">ml</option>
+                <option value="g">g</option>
+              </select>
+            </div>
+            <div>
+              <label>Familia <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· cascada con categoría</span></label>
               <select id="mp-familia">
                 <option>Aloe Vera</option>
               </select>
@@ -645,14 +672,20 @@
           </div>
         </div>
 
-        <!-- Descripción -->
-        <div class="form-section">
-          <label>Descripción (ES)</label>
-          <textarea id="mp-descripcion" style="min-height:54px;">La Sábila ha sido por años el secreto de belleza natural para el cabello.</textarea>
+        <!-- Descripción / Modo de empleo -->
+        <div class="grid-2">
+          <div>
+            <label>Descripción (ES)</label>
+            <textarea id="mp-descripcion" style="min-height:54px;">La Sábila ha sido por años el secreto de belleza natural para el cabello.</textarea>
+          </div>
+          <div>
+            <label>Modo de empleo (ES)</label>
+            <textarea id="mp-modo-empleo" style="min-height:54px;" placeholder="Aplicar sobre el cabello húmedo de medios a puntas."></textarea>
+          </div>
         </div>
 
-        <!-- No contiene / Ingredientes -->
-        <div class="grid-2">
+        <!-- No contiene / Ingredientes / Alérgenos -->
+        <div class="grid-3">
           <div>
             <p class="form-section__title" style="font-size:11px;">No contiene <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· un ítem por línea</span></p>
             <textarea id="mp-no-contiene" style="min-height:90px;">Parabenos
@@ -662,6 +695,10 @@ Aceite mineral</textarea>
           <div>
             <p class="form-section__title" style="font-size:11px;">Ingredientes <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· párrafo completo</span></p>
             <textarea id="mp-ingredientes-inci" style="min-height:90px;">Aqua, Aloe Barbadensis Leaf Juice, Glycerin, Carbomer...</textarea>
+          </div>
+          <div>
+            <p class="form-section__title" style="font-size:11px;">Alérgenos (ES) <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· contiene</span></p>
+            <textarea id="mp-alergenos" style="min-height:90px;" placeholder="Linalool, Limoneno..."></textarea>
           </div>
         </div>
 
@@ -684,6 +721,12 @@ Aceite mineral</textarea>
               <p class="img-hint">Se convierte a WebP · preset "producto" 800×800 · se guarda como <span style="font-family:var(--font-mono);">PP088936.webp</span></p>
             </div>
           </div>
+        </div>
+
+        <!-- Notas internas -->
+        <div class="form-section">
+          <label>Notas <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· solo uso interno, no se muestra en el sitio</span></label>
+          <textarea id="mp-notas" style="min-height:40px; background:var(--color-background-secondary);" placeholder="Notas internas del equipo..."></textarea>
         </div>
 
         <!-- Flags -->
@@ -714,7 +757,8 @@ Aceite mineral</textarea>
 
 
   <!-- Scripts -->
-  <script src="js/admin.js?v=2" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="js/admin.js?v=3" type="module"></script>
 
 </body>
 </html>
