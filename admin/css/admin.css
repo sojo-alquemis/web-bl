@@ -437,17 +437,24 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
 
 .modal {
   width: 100%;
-  max-width: 600px;
+  max-width: 720px;
   background: var(--color-background-primary);
   border-radius: var(--border-radius-lg);
   border: 0.5px solid var(--color-border-tertiary);
   overflow: hidden;
 }
 
+/* Variante para formularios con más campos por fila (ej. modal de Producto,
+   que usa grid-3 además de grid-2) — necesita más aire horizontal que
+   Familia/Ingrediente para que las columnas no queden apretadas. */
+.modal--wide { max-width: 960px; }
+
 .modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   padding: 14px 18px;
   border-bottom: 0.5px solid var(--color-border-tertiary);
 }
@@ -458,6 +465,7 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 12px;
   color: var(--color-text-secondary);
 }
@@ -478,6 +486,25 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
   padding: 14px 18px;
   border-top: 0.5px solid var(--color-border-tertiary);
   background: var(--color-background-secondary);
+}
+
+/* ── Responsive: modales y grids de formulario ─────────────
+   El admin no tenía ningún breakpoint — en pantallas angostas (tablet
+   vertical / celular) los grid-2/grid-3 quedaban con columnas demasiado
+   angostas para ser usables. A partir de aquí se apilan en una sola
+   columna y el modal aprovecha casi todo el ancho disponible. */
+@media (max-width: 860px) {
+  .modal, .modal--wide { max-width: 94vw; }
+}
+
+@media (max-width: 640px) {
+  .modal-overlay { padding: 16px 10px; align-items: center; }
+  .modal, .modal--wide { max-width: 100%; }
+  .modal__header { padding: 12px 14px; }
+  .modal__body   { padding: 14px; max-height: 78vh; gap: 14px; }
+  .modal__footer { padding: 12px 14px; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .col-span-2 { grid-column: 1 / -1; }
 }
 
 /* ── Form sections ──────────────────────────────────────── */
