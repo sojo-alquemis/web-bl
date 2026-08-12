@@ -658,7 +658,7 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
 /* ── Families ingredients grid ──────────────────────────── */
 .fam-ing-grid {
   display: grid;
-  grid-template-columns: 44px 1fr 90px 64px 70px;
+  grid-template-columns: 44px 1fr 90px 64px 70px 34px;
   gap: 10px;
   align-items: center;
 }

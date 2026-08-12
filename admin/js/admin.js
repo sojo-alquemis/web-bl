@@ -6,7 +6,7 @@
 import {
   getProductos, getFamilias, getIngredientes, upsertProducto, deleteProducto,
   upsertFamilia, deleteFamilia,
-  getFamiliasIngrediente, upsertFamiliaIngrediente,
+  getFamiliasIngrediente, upsertFamiliaIngrediente, deleteFamiliaIngrediente,
   upsertIngrediente, deleteIngrediente,
   getBanners, upsertBanner, deleteBanner,
   getCategorias, upsertCategoria,
@@ -1503,6 +1503,7 @@ function _buildFiRow(f, idx) {
       <input value="${f.abreviatura || ''}" data-fi-abrev maxlength="3" placeholder="Ab">
       <input type="number" value="${f.orden ?? idx + 1}" data-fi-orden>
       <button class="btn" data-fi-save type="button" style="font-size:12px;padding:6px 8px;">Guardar</button>
+      <button class="btn btn-danger" data-fi-delete type="button" title="Eliminar" style="font-size:12px;padding:6px 8px;"><i class="ti ti-trash"></i></button>
     </div>`;
 }
 
@@ -1514,6 +1515,9 @@ function _renderFiTable() {
 
   wrap.querySelectorAll('[data-fi-save]').forEach(btn => {
     btn.addEventListener('click', () => _saveFiRow(btn.closest('[data-fi-idx]')));
+  });
+  wrap.querySelectorAll('[data-fi-delete]').forEach(btn => {
+    btn.addEventListener('click', () => _deleteFiRow(btn.closest('[data-fi-idx]')));
   });
   wrap.querySelectorAll('[data-fi-color]').forEach(input => {
     input.addEventListener('input', (e) => {
@@ -1573,6 +1577,40 @@ async function _saveFiRow(rowEl) {
   } catch (err) {
     console.error('[admin] Error al guardar familia de ingrediente:', err);
     await showAlert(`Error al guardar: ${err.message}`);
+  }
+}
+
+/** Elimina una familia de ingrediente (tabla periódica) — o simplemente
+ * descarta la fila si todavía no se había guardado (draft sin id). */
+async function _deleteFiRow(rowEl) {
+  if (!rowEl) return;
+  const id = rowEl.dataset.fiId || null;
+
+  // Draft sin guardar: se descarta localmente, sin tocar la DB.
+  if (!id) {
+    const rowIdx = Number(rowEl.dataset.fiIdx);
+    const draftPos = rowIdx - _allFamiliasIngrediente.length;
+    if (draftPos >= 0 && draftPos < _fiDraftRows.length) _fiDraftRows.splice(draftPos, 1);
+    _renderFiTable();
+    return;
+  }
+
+  const nombre = rowEl.querySelector('[data-fi-nombre]')?.value.trim()
+    || _allFamiliasIngrediente.find(f => f.id === id)?.nombre_es
+    || id;
+  if (!(await showConfirm(`¿Eliminar la familia de ingrediente "${nombre}"? Los ingredientes que la usan quedarán sin familia asignada.`))) return;
+
+  try {
+    if (!USE_MOCK) {
+      const { ok, error } = await deleteFamiliaIngrediente(id);
+      if (!ok) { await showAlert(`Error al eliminar: ${error?.message || 'desconocido'}`); return; }
+    }
+    _allFamiliasIngrediente = _allFamiliasIngrediente.filter(f => f.id !== id);
+    _renderFiTable();
+    _renderIngFamiliaSelect(document.getElementById('ing-familia')?.value);
+  } catch (err) {
+    console.error('[admin] Error al eliminar familia de ingrediente:', err);
+    await showAlert(`Error al eliminar: ${err.message}`);
   }
 }
 

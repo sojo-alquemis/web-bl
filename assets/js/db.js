@@ -293,6 +293,12 @@ export async function upsertFamiliaIngrediente(familiaIngrediente) {
   return { ok: !error, error, data };
 }
 
+export async function deleteFamiliaIngrediente(id) {
+  if (USE_MOCK) { console.warn('[db] deleteFamiliaIngrediente en mock — no persiste'); return { ok: true }; }
+  const { error } = await (await _catalogoClient()).from('familias_ingrediente').delete().eq('id', id);
+  return { ok: !error, error };
+}
+
 // ── Ingredientes ──────────────────────────────────────────────
 
 /**
