@@ -533,12 +533,13 @@
               <input type="text" id="mp-tipo" value="Gel Corporal">
             </div>
             <div>
-              <label>Subcategoría <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· columna K del Excel (subcategoria_slug) · se muestra en el sitio como "Categoría"</span></label>
+              <label>Subcategoría</label>
               <select id="mp-categoria">
                 <option value="capilar">Cuidado Capilar</option>
                 <option value="facial">Cuidado Facial</option>
                 <option value="corporal">Cuidado Corporal</option>
               </select>
+              <p style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;">Columna K del Excel (subcategoria_slug) · se muestra en el sitio como "Categoría"</p>
             </div>
           </div>
           <div class="grid-3" style="margin-top:10px;">
@@ -613,9 +614,12 @@ Aceite mineral</textarea>
         <!-- Productos relacionados -->
         <div class="form-section">
           <p class="form-section__title">Productos relacionados</p>
-          <div class="tags-wrap">
-            <span class="tag">PP088901 · Gel After Sun <button style="border:none;background:transparent;cursor:pointer;padding:0;font-size:11px;">✕</button></span>
-            <button class="tag-add"><i class="ti ti-plus" style="font-size:12px;"></i> buscar producto</button>
+          <div class="tags-wrap" id="mp-relacionados-tags"></div>
+          <div class="flex-row" style="margin-top:8px; gap:8px;">
+            <select id="mp-relacionados-select" style="flex:1;">
+              <option value="">— Elegir producto —</option>
+            </select>
+            <button class="btn" id="mp-relacionados-add" type="button"><i class="ti ti-plus" style="font-size:12px;"></i> Agregar</button>
           </div>
         </div>
 

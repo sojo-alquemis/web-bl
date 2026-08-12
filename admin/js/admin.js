@@ -5,6 +5,7 @@
 
 import {
   getProductos, getFamilias, getIngredientes, upsertProducto, deleteProducto,
+  getProductoRelacionados, setProductoRelacionados,
   upsertFamilia, deleteFamilia,
   getFamiliasIngrediente, upsertFamiliaIngrediente, deleteFamiliaIngrediente,
   upsertIngrediente, deleteIngrediente,
@@ -430,6 +431,7 @@ const MP_CHECK_MAP = { 'mp-destacado': 'destacado', 'mp-activo': 'activo' };
 // contra qué código NO comparar (el propio, si se está editando).
 let _currentEditCodigo = null;
 let _pendingImagenUrl  = null; // URL resultante de la última imagen subida en este modal
+let _currentRelacionados = []; // códigos de los productos relacionados elegidos en este modal
 
 /**
  * Puebla el select de familia del modal. Si se pasa una categoría, filtra
@@ -491,6 +493,50 @@ document.getElementById('mp-categoria')?.addEventListener('change', (e) => {
   _populateModalFamiliaSelect(e.target.value, '');
 });
 
+// ── Productos relacionados (curados a mano, tabla producto_relacionados) ──
+
+/** Pinta los tags de _currentRelacionados; el nombre se busca en _allProductos. */
+function _renderRelacionadosTags() {
+  const wrap = document.getElementById('mp-relacionados-tags');
+  if (!wrap) return;
+  wrap.innerHTML = _currentRelacionados.map(codigo => {
+    const p = _allProductos.find(x => x.codigo === codigo);
+    const nombre = p ? p.nombre_es : codigo;
+    return `<span class="tag">${codigo} · ${nombre} <button type="button" data-rel-remove="${codigo}" style="border:none;background:transparent;cursor:pointer;padding:0;font-size:11px;">✕</button></span>`;
+  }).join('') || `<span style="font-size:12px;color:var(--color-text-tertiary);">Sin productos relacionados todavía.</span>`;
+
+  wrap.querySelectorAll('[data-rel-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _currentRelacionados = _currentRelacionados.filter(c => c !== btn.dataset.relRemove);
+      _renderRelacionadosTags();
+      _populateRelacionadosSelect();
+    });
+  });
+}
+
+/** Puebla el select de "elegir producto" — excluye el propio producto y los ya agregados. */
+function _populateRelacionadosSelect() {
+  const el = document.getElementById('mp-relacionados-select');
+  if (!el) return;
+  const propio = document.getElementById('mp-codigo')?.value.trim() || '';
+  const disponibles = _allProductos.filter(p => p.codigo !== propio && !_currentRelacionados.includes(p.codigo));
+  el.innerHTML = '<option value="">— Elegir producto —</option>' +
+    disponibles.map(p => `<option value="${p.codigo}">${p.codigo} · ${p.nombre_es}</option>`).join('');
+}
+
+document.getElementById('mp-relacionados-add')?.addEventListener('click', () => {
+  const el = document.getElementById('mp-relacionados-select');
+  const codigo = el?.value || '';
+  if (!codigo || _currentRelacionados.includes(codigo)) return;
+  _currentRelacionados.push(codigo);
+  _renderRelacionadosTags();
+  _populateRelacionadosSelect();
+});
+
+// Si se cambia el código (al crear un producto nuevo) hay que refrescar el
+// select para que no se pueda elegir el propio producto como relacionado.
+document.getElementById('mp-codigo')?.addEventListener('input', () => _populateRelacionadosSelect());
+
 function _fillProductForm(producto) {
   const p = producto || {};
   for (const [id, field] of Object.entries(MP_FIELD_MAP)) {
@@ -525,6 +571,25 @@ function _fillProductForm(producto) {
       : `<i class="ti ti-photo" style="font-size:24px;"></i>`;
   }
   if (status) { status.style.display = 'none'; status.textContent = ''; }
+
+  // Relacionados: se limpian y se pintan de una (vacío) para que el modal no
+  // se sienta "trabado" — si es una edición, se cargan de la DB por separado
+  // y se re-pintan cuando lleguen (guardado contra reabrir el modal rápido
+  // con otro producto mientras el fetch anterior todavía está en vuelo).
+  _currentRelacionados = [];
+  _renderRelacionadosTags();
+  _populateRelacionadosSelect();
+  if (producto?.codigo && !USE_MOCK) {
+    const codigoAlAbrir = producto.codigo;
+    getProductoRelacionados(codigoAlAbrir).then(rows => {
+      if (_currentEditCodigo !== codigoAlAbrir) return; // se cerró/cambió el modal mientras cargaba
+      _currentRelacionados = rows.map(r => r.codigo);
+      _renderRelacionadosTags();
+      _populateRelacionadosSelect();
+    }).catch(err => {
+      console.error('[admin] Error cargando productos relacionados:', err);
+    });
+  }
 }
 
 function openProductModal(codigo) {
@@ -612,6 +677,9 @@ document.getElementById('modal-product-save')?.addEventListener('click', async (
     if (!USE_MOCK) {
       const { ok, error } = await upsertProducto({ codigo, ...producto });
       if (!ok) { await showAlert(`Error al guardar: ${error?.message || 'desconocido'}`); return; }
+
+      const { ok: okRel, error: errRel } = await setProductoRelacionados(codigo, _currentRelacionados);
+      if (!okRel) { await showAlert(`El producto se guardó, pero los relacionados no: ${errRel?.message || 'desconocido'}`); }
     }
 
     // Reconstruir la forma "con joins" para reflejarlo de inmediato en la

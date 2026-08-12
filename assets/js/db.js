@@ -398,6 +398,15 @@ export async function getProductos({ marca = 'bioland', categoria, familia_slug,
 
 /**
  * Trae un producto por slug, incluyendo sus relacionados.
+ *
+ * OJO con el embed de "relacionados": la tabla producto_relacionados tiene
+ * DOS columnas que apuntan a productos.codigo (producto_codigo y
+ * relacionado_codigo — es una tabla de auto-relación, un producto se
+ * relaciona con otro producto). PostgREST no puede adivinar sola cuál de
+ * las dos usar para cada lado del embed sin que se lo digamos explícito
+ * (nombre de la FK) — sin esto, la consulta entera fallaba con "more than
+ * one relationship was found" y getProducto() rompía SIEMPRE (la página
+ * de producto pública mostraba "no encontrado" para cualquier producto).
  */
 export async function getProducto(slug) {
   if (USE_MOCK) {
@@ -415,9 +424,9 @@ export async function getProducto(slug) {
       slug, abreviatura, nombre_es,
       familia_ingrediente:familias_ingrediente(color, color_texto)
     ),
-    relacionados:producto_relacionados(
+    relacionados:producto_relacionados!producto_relacionados_producto_codigo_fkey(
       orden,
-      producto:productos(
+      producto:productos!producto_relacionados_relacionado_codigo_fkey(
         codigo, slug, nombre_es, tipo_es, tamano_ml, imagen_url,
         ingrediente_principal:ingredientes(
           abreviatura, nombre_es,
@@ -435,7 +444,45 @@ export async function getProducto(slug) {
       color_texto: data.ingrediente_principal.familia_ingrediente?.color_texto,
     } : null,
   }]);
+  // Aplana {orden, producto:{...}} → {...producto, orden}, ordenado.
+  normalizado.relacionados = (normalizado.relacionados || [])
+    .map(r => ({ ...r.producto, orden: r.orden }))
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
   return normalizado;
+}
+
+// ── Productos relacionados (curados a mano desde el admin) ────
+
+/**
+ * Lista de productos relacionados de UN producto (por código), ya
+ * aplanada — para poblar el picker del modal de producto en el admin.
+ */
+export async function getProductoRelacionados(codigo) {
+  if (USE_MOCK) return [];
+  const { data, error } = await (await _catalogoClient())
+    .from('producto_relacionados')
+    .select('orden, producto:productos!producto_relacionados_relacionado_codigo_fkey(codigo, nombre_es, tipo_es)')
+    .eq('producto_codigo', codigo)
+    .order('orden');
+  if (error) throw error;
+  return (data || []).map(r => ({ ...r.producto, orden: r.orden }));
+}
+
+/**
+ * Reemplaza por completo la lista de relacionados de un producto (borra
+ * todo lo que tenía y vuelve a insertar la lista nueva, en ese orden) —
+ * más simple que diffear altas/bajas, y esta lista siempre es chica.
+ */
+export async function setProductoRelacionados(codigo, relacionadoCodigos) {
+  if (USE_MOCK) return { ok: true };
+  const sb = await _catalogoClient();
+  const { error: delError } = await sb.from('producto_relacionados').delete().eq('producto_codigo', codigo);
+  if (delError) return { ok: false, error: delError };
+  if (!relacionadoCodigos.length) return { ok: true };
+  const rows = relacionadoCodigos.map((relacionado_codigo, i) => ({ producto_codigo: codigo, relacionado_codigo, orden: i }));
+  const { error: insError } = await sb.from('producto_relacionados').insert(rows);
+  if (insError) return { ok: false, error: insError };
+  return { ok: true };
 }
 
 /**
