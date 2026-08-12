@@ -517,6 +517,20 @@
           </div>
         </div>
 
+        <!-- Flags -->
+        <div style="display:flex; gap:18px; align-items:center; padding-top:4px; border-top:0.5px solid var(--color-border-tertiary);">
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
+            <input type="checkbox" checked id="mp-destacado"> Destacado
+          </label>
+          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
+            <input type="checkbox" checked id="mp-activo"> Activo
+          </label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:13px; color:var(--color-text-secondary);">Orden</span>
+            <input type="number" id="mp-orden" value="1" style="width:56px;">
+          </div>
+        </div>
+
         <!-- Datos básicos -->
         <div class="form-section">
           <p class="form-section__title">
@@ -639,20 +653,6 @@ Aceite mineral</textarea>
         <div class="form-section">
           <label>Notas <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· solo uso interno, no se muestra en el sitio</span></label>
           <textarea id="mp-notas" style="min-height:40px; background:var(--color-background-secondary);" placeholder="Notas internas del equipo..."></textarea>
-        </div>
-
-        <!-- Flags -->
-        <div style="display:flex; gap:18px; align-items:center; padding-top:4px; border-top:0.5px solid var(--color-border-tertiary);">
-          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
-            <input type="checkbox" checked id="mp-destacado"> Destacado
-          </label>
-          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-bottom:0;">
-            <input type="checkbox" checked id="mp-activo"> Activo
-          </label>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span style="font-size:13px; color:var(--color-text-secondary);">Orden</span>
-            <input type="number" id="mp-orden" value="1" style="width:56px;">
-          </div>
         </div>
 
       </div><!-- /modal__body -->
