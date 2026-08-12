@@ -542,6 +542,8 @@
               <label>Nombre</label>
               <input type="text" id="mp-nombre" value="Gel Aloe Vera">
             </div>
+          </div>
+          <div class="grid-3" id="mp-row-tipo-cat-fam" style="margin-top:10px;">
             <div>
               <label>Tipo</label>
               <input type="text" id="mp-tipo" value="Gel Corporal">
@@ -553,10 +555,16 @@
                 <option value="facial">Cuidado Facial</option>
                 <option value="corporal">Cuidado Corporal</option>
               </select>
-              <p style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;">Columna K del Excel (subcategoria_slug) · se muestra en el sitio como "Categoría"</p>
             </div>
+            <div>
+              <label>Familia</label>
+              <select id="mp-familia">
+                <option>Aloe Vera</option>
+              </select>
+            </div>
+            <p class="col-span-2" style="font-size:11px;color:var(--color-text-tertiary);margin:4px 0 0;">Columna K del Excel (subcategoria_slug) · se muestra en el sitio como "Categoría"</p>
           </div>
-          <div class="grid-3" style="margin-top:10px;">
+          <div class="grid-2" id="mp-row-tamano-unidad" style="margin-top:10px;">
             <div>
               <label>Tamaño</label>
               <input type="number" id="mp-ml" value="300">
@@ -566,12 +574,6 @@
               <select id="mp-unidad">
                 <option value="ml">ml</option>
                 <option value="g">g</option>
-              </select>
-            </div>
-            <div>
-              <label>Familia <span style="text-transform:none;letter-spacing:0;color:var(--color-text-tertiary);font-weight:400;">· cascada con categoría</span></label>
-              <select id="mp-familia">
-                <option>Aloe Vera</option>
               </select>
             </div>
           </div>
