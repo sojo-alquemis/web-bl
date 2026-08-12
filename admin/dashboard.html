@@ -36,7 +36,6 @@
       <button class="admin-tab active" role="tab" data-tab="productos">Productos</button>
       <button class="admin-tab" role="tab" data-tab="familias">Familias</button>
       <button class="admin-tab" role="tab" data-tab="ingredientes">Ingredientes</button>
-      <button class="admin-tab" role="tab" data-tab="contenido">Contenido</button>
       <button class="admin-tab" role="tab" data-tab="banners">Banners</button>
       <button class="admin-tab" role="tab" data-tab="ajustes">Ajustes</button>
       <div class="admin-tabs__lang">
@@ -197,103 +196,6 @@
 
     </div><!-- /tab-ingredientes -->
 
-
-    <!-- ══════════════════════════════════════════════════════
-         TAB: CONTENIDO
-    ══════════════════════════════════════════════════════════ -->
-    <div class="tab-panel" id="tab-contenido" role="tabpanel">
-
-      <!-- Quienes Somos -->
-      <div class="admin-card">
-        <p class="admin-card__title">Contenido · Quienes Somos</p>
-
-        <!-- Hero block (paginas_contenido, clave="quienes-somos") -->
-        <div style="border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:12px; margin-bottom:12px;">
-          <p class="section-label">Hero</p>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <input id="pc-titulo" placeholder="Título (ES)">
-            <textarea id="pc-cuerpo" placeholder="Declaración de marca (ES)" style="min-height:40px;"></textarea>
-            <div class="flex-row" style="gap:8px;">
-              <div class="img-thumb" id="pc-imagen-thumb" style="width:44px;height:44px;"><i class="ti ti-photo" style="font-size:16px;"></i></div>
-              <button class="btn" id="pc-imagen-btn" type="button" style="align-self:flex-start;"><i class="ti ti-upload"></i> Imagen de fondo</button>
-              <input type="file" id="pc-imagen-input" accept="image/*" style="display:none;">
-              <span id="pc-imagen-status" style="display:none;font-size:12px;"></span>
-              <button class="btn btn-primary" id="pc-save" type="button" style="margin-left:auto;">Guardar hero</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Narrative blocks (bloques_contenido, pagina="quienes-somos") -->
-        <p class="section-label" id="bc-form-title">Bloques narrativos · nuevo</p>
-
-        <div class="grid-2" style="margin-bottom:8px;">
-          <div>
-            <label>Título (opcional)</label>
-            <input type="text" id="bc-titulo" placeholder="Título del bloque">
-          </div>
-          <div>
-            <label>Layout</label>
-            <select id="bc-layout">
-              <option value="img_izquierda">Imagen a la izquierda</option>
-              <option value="img_derecha">Imagen a la derecha</option>
-              <option value="fondo_completo">Fondo completo</option>
-            </select>
-          </div>
-          <div class="col-span-2">
-            <label>Texto</label>
-            <textarea id="bc-texto" style="min-height:50px;" placeholder="Texto del bloque narrativo..."></textarea>
-          </div>
-          <div>
-            <label>Orden</label>
-            <input type="number" id="bc-orden" value="0">
-          </div>
-        </div>
-        <div class="flex-row" style="gap:8px; margin-bottom:12px;">
-          <div class="img-thumb" id="bc-imagen-thumb" style="width:44px;height:44px;"><i class="ti ti-photo" style="font-size:16px;"></i></div>
-          <button class="btn" id="bc-imagen-btn" type="button"><i class="ti ti-upload"></i> Imagen</button>
-          <input type="file" id="bc-imagen-input" accept="image/*" style="display:none;">
-          <span id="bc-imagen-status" style="display:none;font-size:12px;"></span>
-          <label style="font-size:13px; display:flex; align-items:center; gap:6px; margin-left:auto;">
-            <input type="checkbox" id="bc-activo" checked> Activo
-          </label>
-          <button class="btn" id="bc-cancel" type="button" style="display:none;">Cancelar edición</button>
-          <button class="btn btn-primary" id="bc-save" type="button">Guardar bloque</button>
-        </div>
-
-        <div id="bc-table-body"></div>
-
-        <div class="flex-row--between" style="margin-top:4px;">
-          <span style="font-size:12px;color:var(--color-text-tertiary);" id="bc-count"></span>
-        </div>
-      </div>
-
-      <!-- Promesas (filosofía del home) -->
-      <div class="admin-card">
-        <p class="admin-card__title" id="pr-form-title">Promesas del home · nueva</p>
-        <p style="font-size:12px; color:var(--color-text-tertiary); margin:0 0 12px;">Frases cortas que aparecen como filosofía de marca en el home.</p>
-
-        <div class="flex-row" style="gap:8px; margin-bottom:10px;">
-          <div class="img-thumb" id="pr-icono-thumb" style="width:40px;height:40px;"><i class="ti ti-photo" style="font-size:15px;"></i></div>
-          <button class="btn" id="pr-icono-btn" type="button" style="font-size:12px;"><i class="ti ti-upload"></i> Ícono (opcional)</button>
-          <input type="file" id="pr-icono-input" accept="image/*" style="display:none;">
-          <input type="text" id="pr-texto" placeholder="Texto de la promesa" style="flex:1;">
-          <input type="number" id="pr-orden" value="0" style="width:70px;" title="Orden">
-          <label style="font-size:13px; display:flex; align-items:center; gap:6px;">
-            <input type="checkbox" id="pr-activo" checked> Activa
-          </label>
-        </div>
-        <span id="pr-icono-status" style="display:none;font-size:12px;"></span>
-
-        <div class="flex-row--between" style="margin-top:4px; margin-bottom:8px;">
-          <button class="btn" id="pr-cancel" type="button" style="display:none;">Cancelar edición</button>
-          <button class="btn btn-primary" id="pr-save" type="button" style="margin-left:auto;">Guardar promesa</button>
-        </div>
-
-        <div id="pr-table-body"></div>
-        <span style="font-size:12px;color:var(--color-text-tertiary);" id="pr-count"></span>
-      </div>
-
-    </div><!-- /tab-contenido -->
 
 
     <!-- ══════════════════════════════════════════════════════
