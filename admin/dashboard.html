@@ -614,13 +614,8 @@ Aceite mineral</textarea>
         <!-- Productos relacionados -->
         <div class="form-section">
           <p class="form-section__title">Productos relacionados</p>
-          <div class="tags-wrap" id="mp-relacionados-tags"></div>
-          <div class="flex-row" style="margin-top:8px; gap:8px;">
-            <select id="mp-relacionados-select" style="flex:1;">
-              <option value="">— Elegir producto —</option>
-            </select>
-            <button class="btn" id="mp-relacionados-add" type="button"><i class="ti ti-plus" style="font-size:12px;"></i> Agregar</button>
-          </div>
+          <input type="text" id="mp-relacionados-search" placeholder="Buscar producto por nombre o código..." autocomplete="off">
+          <div class="checklist" id="mp-relacionados-checklist" style="margin-top:8px;"></div>
         </div>
 
         <!-- Imagen — un producto = una sola imagen -->

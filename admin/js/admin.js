@@ -494,48 +494,67 @@ document.getElementById('mp-categoria')?.addEventListener('change', (e) => {
 });
 
 // ── Productos relacionados (curados a mano, tabla producto_relacionados) ──
+// Checklist con buscador: los marcados quedan siempre arriba de la lista,
+// y el propio checkbox agrega/quita — sin botón de "agregar" ni de "✕"
+// separados (mismo patrón que "Presentaciones" en el editor de Seed).
+let _relacionadosFiltro = '';
 
-/** Pinta los tags de _currentRelacionados; el nombre se busca en _allProductos. */
-function _renderRelacionadosTags() {
-  const wrap = document.getElementById('mp-relacionados-tags');
-  if (!wrap) return;
-  wrap.innerHTML = _currentRelacionados.map(codigo => {
-    const p = _allProductos.find(x => x.codigo === codigo);
-    const nombre = p ? p.nombre_es : codigo;
-    return `<span class="tag">${codigo} · ${nombre} <button type="button" data-rel-remove="${codigo}" style="border:none;background:transparent;cursor:pointer;padding:0;font-size:11px;">✕</button></span>`;
-  }).join('') || `<span style="font-size:12px;color:var(--color-text-tertiary);">Sin productos relacionados todavía.</span>`;
+function _renderRelacionadosChecklist() {
+  const box = document.getElementById('mp-relacionados-checklist');
+  if (!box) return;
 
-  wrap.querySelectorAll('[data-rel-remove]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _currentRelacionados = _currentRelacionados.filter(c => c !== btn.dataset.relRemove);
-      _renderRelacionadosTags();
-      _populateRelacionadosSelect();
-    });
-  });
-}
-
-/** Puebla el select de "elegir producto" — excluye el propio producto y los ya agregados. */
-function _populateRelacionadosSelect() {
-  const el = document.getElementById('mp-relacionados-select');
-  if (!el) return;
   const propio = document.getElementById('mp-codigo')?.value.trim() || '';
-  const disponibles = _allProductos.filter(p => p.codigo !== propio && !_currentRelacionados.includes(p.codigo));
-  el.innerHTML = '<option value="">— Elegir producto —</option>' +
-    disponibles.map(p => `<option value="${p.codigo}">${p.codigo} · ${p.nombre_es}</option>`).join('');
+  const q = _relacionadosFiltro.trim().toLowerCase();
+
+  let candidatos = _allProductos.filter(p => p.codigo !== propio);
+  if (q) {
+    candidatos = candidatos.filter(p =>
+      (p.nombre_es || '').toLowerCase().includes(q) ||
+      (p.codigo || '').toLowerCase().includes(q)
+    );
+  }
+  // Marcados primero (arriba), después alfabético por nombre.
+  candidatos.sort((a, b) => {
+    const aChecked = _currentRelacionados.includes(a.codigo);
+    const bChecked = _currentRelacionados.includes(b.codigo);
+    if (aChecked !== bChecked) return aChecked ? -1 : 1;
+    return (a.nombre_es || '').localeCompare(b.nombre_es || '');
+  });
+
+  if (!candidatos.length) {
+    box.innerHTML = `<p class="checklist__empty">${q ? `Ningún producto coincide con "${q}".` : 'No hay otros productos disponibles.'}</p>`;
+    return;
+  }
+
+  box.innerHTML = candidatos.map(p => {
+    const checked = _currentRelacionados.includes(p.codigo) ? ' checked' : '';
+    return `
+      <label class="checklist__item">
+        <input type="checkbox" value="${p.codigo}"${checked}>
+        <span>${p.codigo} · ${p.nombre_es}</span>
+      </label>`;
+  }).join('');
 }
 
-document.getElementById('mp-relacionados-add')?.addEventListener('click', () => {
-  const el = document.getElementById('mp-relacionados-select');
-  const codigo = el?.value || '';
-  if (!codigo || _currentRelacionados.includes(codigo)) return;
-  _currentRelacionados.push(codigo);
-  _renderRelacionadosTags();
-  _populateRelacionadosSelect();
+document.getElementById('mp-relacionados-checklist')?.addEventListener('change', (e) => {
+  if (!e.target.matches('input[type="checkbox"]')) return;
+  const codigo = e.target.value;
+  if (e.target.checked) {
+    if (!_currentRelacionados.includes(codigo)) _currentRelacionados.push(codigo);
+  } else {
+    _currentRelacionados = _currentRelacionados.filter(c => c !== codigo);
+  }
+  _renderRelacionadosChecklist(); // re-pinta para que el marcado suba arriba
 });
 
-// Si se cambia el código (al crear un producto nuevo) hay que refrescar el
-// select para que no se pueda elegir el propio producto como relacionado.
-document.getElementById('mp-codigo')?.addEventListener('input', () => _populateRelacionadosSelect());
+document.getElementById('mp-relacionados-search')?.addEventListener('input', (e) => {
+  _relacionadosFiltro = e.target.value;
+  _renderRelacionadosChecklist();
+});
+
+// Si se cambia el código (al crear un producto nuevo) hay que refrescar la
+// lista para que no se pueda marcar el propio producto como relacionado.
+document.getElementById('mp-codigo')?.addEventListener('input', () => _renderRelacionadosChecklist());
 
 function _fillProductForm(producto) {
   const p = producto || {};
@@ -577,15 +596,16 @@ function _fillProductForm(producto) {
   // y se re-pintan cuando lleguen (guardado contra reabrir el modal rápido
   // con otro producto mientras el fetch anterior todavía está en vuelo).
   _currentRelacionados = [];
-  _renderRelacionadosTags();
-  _populateRelacionadosSelect();
+  _relacionadosFiltro = '';
+  const relSearchEl = document.getElementById('mp-relacionados-search');
+  if (relSearchEl) relSearchEl.value = '';
+  _renderRelacionadosChecklist();
   if (producto?.codigo && !USE_MOCK) {
     const codigoAlAbrir = producto.codigo;
     getProductoRelacionados(codigoAlAbrir).then(rows => {
       if (_currentEditCodigo !== codigoAlAbrir) return; // se cerró/cambió el modal mientras cargaba
       _currentRelacionados = rows.map(r => r.codigo);
-      _renderRelacionadosTags();
-      _populateRelacionadosSelect();
+      _renderRelacionadosChecklist();
     }).catch(err => {
       console.error('[admin] Error cargando productos relacionados:', err);
     });
