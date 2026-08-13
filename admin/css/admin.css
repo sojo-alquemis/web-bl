@@ -90,6 +90,16 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
 }
 .btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
 
+/* Nuevo (productos): colores invertidos respecto al resto de botones primarios — fondo blanco, texto/borde azul marca. */
+#btn-new-product {
+  background: #fff;
+  color: var(--brand);
+  border-color: var(--brand);
+}
+#btn-new-product:hover {
+  background: var(--color-background-secondary);
+}
+
 .btn-danger {
   color: var(--color-text-danger);
   border-color: transparent;
