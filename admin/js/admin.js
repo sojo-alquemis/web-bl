@@ -1110,6 +1110,15 @@ document.getElementById('fam-imagen-input')?.addEventListener('change', async (e
     await showAlert('Ingresa el slug de la familia antes de subir la imagen (el archivo se nombra con ese slug).');
     return;
   }
+  // La ruta en Storage incluye la categoría como subcarpeta (familias/capilar/,
+  // familias/facial/, familias/corporal/) — sin esto, dos familias con el
+  // mismo slug en categorías distintas (ej. "Aloe Vera" en capilar y en
+  // facial) se pisaban la imagen entre sí al subir a la misma ruta plana.
+  const categoria = document.getElementById('fam-categoria')?.value || '';
+  if (!categoria) {
+    await showAlert('Elige la categoría de la familia antes de subir la imagen (define la subcarpeta en Storage).');
+    return;
+  }
 
   const statusEl = document.getElementById('fam-imagen-status');
   function setStatus(text, tone) {
@@ -1125,12 +1134,12 @@ document.getElementById('fam-imagen-input')?.addEventListener('change', async (e
     setStatus('Subiendo…');
     // target: 'catalogo' — las familias viajan junto con productos si el
     // catálogo migra a un proyecto Supabase separado (ver 01_DECISIONS.md).
-    const { ok, url, error } = await uploadAsset('familias', `${slug}.webp`, blob, { target: 'catalogo' });
+    const { ok, url, error } = await uploadAsset(`familias/${categoria}`, `${slug}.webp`, blob, { target: 'catalogo' });
     if (!ok) { setStatus(`Error al subir: ${error?.message || 'desconocido'}`, 'error'); return; }
 
     _pendingFamiliaImagenUrl = url;
     document.getElementById('fam-imagen-thumb').innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
-    setStatus(USE_MOCK ? 'Vista previa lista (modo mock).' : `Imagen lista · se guardó como familias/${slug}.webp`);
+    setStatus(USE_MOCK ? 'Vista previa lista (modo mock).' : `Imagen lista · se guardó como familias/${categoria}/${slug}.webp`);
   } catch (err) {
     console.error('[admin] Error procesando/subiendo imagen de familia:', err);
     setStatus(`Error: ${err.message}`, 'error');
