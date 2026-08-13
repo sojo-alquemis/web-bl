@@ -223,7 +223,8 @@ function _buildRow(p) {
   const texto = ing?.color_texto || '#fff';
   const abr   = ing?.abreviatura || '—';
   const fam   = p.familia?.nombre_es || '—';
-  const nombre = [p.nombre_es, p.tipo_es].filter(Boolean).join(' · ');
+  const nombre = p.nombre_es || '—';
+  const tipo   = p.tipo_es || '—';
 
   const activeIcon = p.activo
     ? `<i class="ti ti-circle-check" style="font-size:18px;color:var(--color-text-success);" title="Activo"></i>`
@@ -240,6 +241,7 @@ function _buildRow(p) {
       <span class="admin-table-code">${p.codigo}</span>
       <span>${nombre}</span>
       <span class="admin-table-family">${fam}</span>
+      <span class="admin-table-type">${tipo}</span>
       <span class="badge-pill" style="background:${color};color:${texto};">${abr}</span>
       ${activeIcon}
       <div class="admin-table-actions">

@@ -331,7 +331,7 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
 .admin-table-head,
 .admin-table-row {
   display: grid;
-  grid-template-columns: 40px 92px 1fr 130px 56px 60px 64px;
+  grid-template-columns: 40px 92px 1fr 120px 100px 56px 60px 64px;
   gap: 8px;
   align-items: center;
   padding: 10px 12px;
@@ -373,7 +373,8 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
   font-size: 12px;
 }
 
-.admin-table-family {
+.admin-table-family,
+.admin-table-type {
   color: var(--color-text-secondary);
   font-size: 12px;
 }
