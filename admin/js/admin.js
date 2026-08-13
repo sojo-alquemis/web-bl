@@ -950,54 +950,6 @@ importInput?.addEventListener('change', async (e) => {
   }
 });
 
-// ── Sincronizar imágenes ya subidas a Storage ────────────────
-// Para productos que ya se importaron ANTES de que el import empezara a
-// asociar imágenes solo (ver arriba) — o cuya foto se subió después por
-// others/tools/subir-imagenes-productos.html, que sube a Storage pero
-// nunca escribe en la DB. Este botón cierra esa brecha sin tener que
-// volver a importar el Excel completo.
-document.getElementById('btn-sync-imagenes')?.addEventListener('click', async () => {
-  const btn = document.getElementById('btn-sync-imagenes');
-  const originalHtml = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i> Buscando…`;
-
-  try {
-    const storageImages = await listProductoImagenesStorage();
-    if (!storageImages.size) {
-      await showAlert('No se encontraron imágenes en productos/ dentro del bucket "media".');
-      return;
-    }
-
-    let asociadas = 0;
-    const fallidas = [];
-    for (const p of _allProductos) {
-      const url = storageImages.get(p.codigo);
-      if (!url || p.imagen_url === url) continue; // sin imagen en Storage, o ya está igual
-      if (!USE_MOCK) {
-        const { ok, error } = await upsertProducto({ codigo: p.codigo, imagen_url: url });
-        if (!ok) { fallidas.push(`${p.codigo}: ${error?.message || 'error desconocido'}`); continue; }
-      }
-      p.imagen_url = url;
-      asociadas++;
-    }
-
-    _renderTable();
-    await showAlert(
-      asociadas
-        ? `${asociadas} producto(s) actualizados con la imagen que ya estaba en Storage.` +
-          (fallidas.length ? `\n\n${fallidas.length} fallaron:\n${fallidas.slice(0, 10).join('\n')}` : '')
-        : 'Todas las imágenes de Storage ya estaban asociadas — no había nada nuevo que sincronizar.'
-    );
-  } catch (err) {
-    console.error('[admin] Error al sincronizar imágenes desde Storage:', err);
-    await showAlert(`Error al sincronizar: ${err.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalHtml;
-  }
-});
-
 // ══════════════════════════════════════════════════════════
 // TAB: FAMILIAS — CRUD manual (no viene del Excel de ACS)
 // ══════════════════════════════════════════════════════════

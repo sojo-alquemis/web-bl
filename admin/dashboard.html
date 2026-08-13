@@ -51,38 +51,39 @@
     <div class="tab-panel active" id="tab-productos" role="tabpanel">
 
       <!-- Toolbar -->
-      <div class="admin-toolbar">
-        <div class="search-wrap">
-          <i class="ti ti-search"></i>
-          <input type="search" placeholder="Buscar por código o nombre" id="prod-search">
+      <div class="admin-toolbar" style="flex-direction:column; align-items:stretch;">
+        <div class="admin-toolbar__row">
+          <button class="btn btn-primary" id="btn-new-product">
+            <i class="ti ti-plus"></i> Nuevo
+          </button>
+          <button class="btn" id="btn-export-excel" title="Exportar a Excel">
+            <i class="ti ti-file-download"></i> Exportar
+          </button>
+          <button class="btn" id="btn-import-excel" title="Importar desde Excel">
+            <i class="ti ti-file-spreadsheet"></i> Importar
+          </button>
+          <input type="file" id="import-excel-input" accept=".xlsx" style="display:none;">
         </div>
-        <select id="prod-filter-cat" style="width:auto;">
-          <option value="">Categoría: todas</option>
-          <option value="capilar">Cuidado Capilar</option>
-          <option value="facial">Cuidado Facial</option>
-          <option value="corporal">Cuidado Corporal</option>
-        </select>
-        <select id="prod-filter-fam" style="width:auto;">
-          <option value="">Familia: todas</option>
-        </select>
-        <select id="prod-filter-estado" style="width:auto;">
-          <option value="">Estado: todos</option>
-          <option value="1">Activos</option>
-          <option value="0">Inactivos</option>
-        </select>
-        <button class="btn" id="btn-export-excel" title="Exportar a Excel">
-          <i class="ti ti-file-download"></i> Exportar
-        </button>
-        <button class="btn" id="btn-import-excel" title="Importar desde Excel">
-          <i class="ti ti-file-spreadsheet"></i> Importar
-        </button>
-        <input type="file" id="import-excel-input" accept=".xlsx" style="display:none;">
-        <button class="btn" id="btn-sync-imagenes" title="Buscar en Storage imágenes que ya existen pero no están asociadas a ningún producto">
-          <i class="ti ti-refresh"></i> Sincronizar imágenes
-        </button>
-        <button class="btn btn-primary" id="btn-new-product">
-          <i class="ti ti-plus"></i> Nuevo
-        </button>
+        <div class="admin-toolbar__row">
+          <div class="search-wrap">
+            <i class="ti ti-search"></i>
+            <input type="search" placeholder="Buscar por código o nombre" id="prod-search">
+          </div>
+          <select id="prod-filter-cat" style="width:auto;">
+            <option value="">Categoría: todas</option>
+            <option value="capilar">Cuidado Capilar</option>
+            <option value="facial">Cuidado Facial</option>
+            <option value="corporal">Cuidado Corporal</option>
+          </select>
+          <select id="prod-filter-fam" style="width:auto;">
+            <option value="">Familia: todas</option>
+          </select>
+          <select id="prod-filter-estado" style="width:auto;">
+            <option value="">Estado: todos</option>
+            <option value="1">Activos</option>
+            <option value="0">Inactivos</option>
+          </select>
+        </div>
       </div>
 
       <!-- Resultado de la última importación -->

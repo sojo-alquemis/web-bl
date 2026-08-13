@@ -275,6 +275,17 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
   flex-wrap: wrap;
 }
 
+.admin-toolbar__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar__row + .admin-toolbar__row {
+  margin-top: 8px;
+}
+
 .admin-toolbar .search-wrap {
   position: relative;
   flex: 1;
@@ -301,6 +312,7 @@ button:hover, .btn:hover { background: var(--color-background-secondary); }
 
 /* ── Table ──────────────────────────────────────────────── */
 .admin-table-wrap {
+  background: var(--color-background-primary);
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
